@@ -64,11 +64,22 @@ const routes = {
     ["观察日志", "list-birdlogs", "按时间回看"]
   ]),
   fitness: () => modulePage("健身", "把身体的变化放进日程", fitnessStats(), [
+    ["系统总览", "fitness-system", "目标、骨架和原则"],
+    ["状态判断", "fitness-status", "每日等级与硬触发"],
+    ["周结构", "fitness-week", "固定主题，动态强度"],
+    ["饮食恢复", "fitness-fuel", "热量、胃差日和经期"],
+    ["拳击规则", "fitness-boxing", "技术、爆发与刹车"],
+    ["AI准则", "fitness-ai", "避免系统跑偏"],
     ["训练计划", "fitness-plan", "安排动作和节奏"],
     ["训练打卡", "workout", "记录完成情况"],
-    ["身体数据", "body", "保存体重围度状态"],
-    ["训练记录", "list-workouts", "回看训练轨迹"]
+    ["身体数据", "body", "体重围度状态"]
   ]),
+  "fitness-system": renderFitnessSystem,
+  "fitness-status": renderFitnessStatus,
+  "fitness-week": renderFitnessWeek,
+  "fitness-fuel": renderFitnessFuel,
+  "fitness-boxing": renderFitnessBoxing,
+  "fitness-ai": renderFitnessAI,
   crochet: () => modulePage("钩织", "让线、图解和作品慢慢成形", crochetStats(), [
     ["作品项目", "project", "记录一件作品"],
     ["图解收藏", "pattern", "保存想做的灵感"],
@@ -212,7 +223,7 @@ function modulePage(title, sub, stats, actions) {
     <section class="stats">
       ${stats.map(([value, label]) => `<div class="stat"><strong>${value}</strong><span>${label}</span></div>`).join("")}
     </section>
-    <section class="action-grid">
+    <section class="action-grid ${actions.length > 6 ? "dense" : ""}">
       ${actions.map(([label, route, desc]) => `
         <a class="card" href="#${route}">
           <small>${label}</small>
@@ -310,6 +321,141 @@ function renderSettings() {
       </div>
     </section>
   `, bottomNav());
+}
+
+function renderFitnessSystem() {
+  return shell("fitness", "力量系统", "固定增长轴 + 动态恢复", `
+    <section class="list">
+      <div class="hint">目标不是减脂或轻健身，而是宽松衣服下仍能看出训练痕迹。</div>
+      <div class="list-stack">
+        ${systemCard("最终体型", "女性力量型训练痕迹", ["三角肌明显", "背阔有结构", "上背立体", "腿部有力量感"])}
+        ${systemCard("固定增长轴", "长期主项不要频繁换", ["蹲类", "罗马尼亚硬拉", "保加利亚分腿蹲", "高位下拉/划船/侧平举/推举"])}
+        ${systemCard("动态恢复", "状态决定今天练多狠", ["强度", "容量", "拳击负荷", "饮食与恢复策略"])}
+      </div>
+      <div class="pager">
+        <a class="ghost" href="#fitness-status">状态</a>
+        <a class="button" href="#fitness">返回</a>
+        <a class="ghost" href="#fitness-week">周结构</a>
+      </div>
+    </section>
+  `, "");
+}
+
+function renderFitnessStatus() {
+  return shell("fitness", "状态判断", "状态决定刺激，不取消主线", `
+    <section class="list">
+      <div class="hint">每天先问睡眠、胃、低血糖、胸闷、黑视、经期、压力、食欲和肌肉恢复。</div>
+      <div class="list-stack">
+        ${systemCard("D级硬触发", "不允许讨价还价", ["明显胸闷/黑视/低血糖", "恶心或胃疼明显", "睡眠<5.5h且疲劳", "只允许八段锦/呼吸/拉伸/快走"])}
+        ${systemCard("C级明显疲劳", "保主题，取消高刺激", ["睡眠<6h", "胃明显不适", "经期虚弱", "主项改技术版/轻稳定"])}
+        ${systemCard("B级轻疲劳", "仍然属于训练日", ["保留主项", "重量-20%", "容量-20%-40%", "取消爆发拳击"])}
+      </div>
+      <div class="pager">
+        <a class="ghost" href="#fitness-system">系统</a>
+        <a class="button" href="#fitness">返回</a>
+        <a class="ghost" href="#fitness-rules">规则</a>
+      </div>
+    </section>
+  `, "");
+}
+
+routes["fitness-rules"] = function renderFitnessRules() {
+  return shell("fitness", "推进规则", "长期可恢复的高质量刺激", `
+    <section class="list">
+      <div class="hint">永远保留 1-2 次余力，不硬顶。</div>
+      <div class="list-stack">
+        ${systemCard("渐进超负荷", "满足条件再加", ["同重量轻松完成目标次数", "动作稳定", "恢复正常", "下次只加 2.5-5%"])}
+        ${systemCard("拳击系统", "按阶段增加强度", ["5-7月 步伐/空击/控制", "8-10月 沙袋/组合/核心旋转", "11月后 爆发组合/体能循环", "B级只做技术空击，C/D取消"])}
+        ${systemCard("饮食恢复", "增肌必须有盈余", ["阶段1 1900-2100 kcal", "阶段2 2100-2300 kcal", "阶段3 2300-2500 kcal", "每周+0.1-0.25kg；胃差日不腰斩热量"])}
+      </div>
+      <div class="pager">
+        <a class="ghost" href="#fitness-status">状态</a>
+        <a class="button" href="#fitness">返回</a>
+        <a class="ghost" href="#fitness-plan">计划</a>
+      </div>
+    </section>
+  `, "");
+};
+
+function renderFitnessWeek() {
+  return shell("fitness", "周结构", "主题固定，刺激动态", `
+    <section class="list">
+      <div class="hint">状态差不是取消一切，而是保留主题、降低刺激。</div>
+      <div class="list-stack">
+        ${systemCard("固定周主题", "长期不漂移", ["周一 下肢", "周二 上肢", "周三 恢复", "周四 下肢"])}
+        ${systemCard("后半周", "力量与专项并行", ["周五 上肢", "周六 拳击", "周日 恢复", "强度按状态调整"])}
+        ${systemCard("渐进超负荷", "满足条件再加", ["动作稳定", "恢复正常", "当前重量轻松完成", "下次只加2.5-5%"])}
+      </div>
+      <div class="pager">
+        <a class="ghost" href="#fitness-status">状态</a>
+        <a class="button" href="#fitness">返回</a>
+        <a class="ghost" href="#fitness-fuel">饮食</a>
+      </div>
+    </section>
+  `, "");
+}
+
+function renderFitnessFuel() {
+  return shell("fitness", "饮食恢复", "增肌与胃稳定同时照顾", `
+    <section class="list">
+      <div class="hint">饮食目标是长期恢复 + 增肌，不是减脂。</div>
+      <div class="list-stack">
+        ${systemCard("热量目标", "按阶段进入盈余", ["阶段1 1900-2100", "阶段2 2100-2300", "阶段3 2300-2500", "每周+0.1-0.25kg"])}
+        ${systemCard("训练前后", "不空腹训练", ["训练前 碳水+少量蛋白", "训练后 碳水+蛋白", "碳水稳定优先", "少食多餐"])}
+        ${systemCard("经期与胃差日", "恢复不等于热量腰斩", ["胃差日 粥/面/土豆泥/米糊/炖菜", "经期1-3天禁PR/爆发/力竭", "黄体期降强度/控盐/补镁", "卵泡期可提高强度"])}
+      </div>
+      <div class="pager">
+        <a class="ghost" href="#fitness-week">周结构</a>
+        <a class="button" href="#fitness">返回</a>
+        <a class="ghost" href="#fitness-boxing">拳击</a>
+      </div>
+    </section>
+  `, "");
+}
+
+function renderFitnessBoxing() {
+  return shell("fitness", "拳击规则", "不是减脂有氧，是专项技术", `
+    <section class="list">
+      <div class="hint">拳击用于身体控制、核心旋转、爆发能力和压迫感。</div>
+      <div class="list-stack">
+        ${systemCard("阶段推进", "从控制到爆发", ["前期 步伐/空击/控制", "中期 沙袋/组合拳/核心旋转", "后期 爆发组合/体能循环", "不把拳击当减脂有氧"])}
+        ${systemCard("状态刹车", "按恢复调整", ["S/A 可做爆发但留余力", "B级取消重拳和爆发组合", "B级保留技术空击/步伐", "C/D取消拳击"])}
+        ${systemCard("训练气质", "力量感来源之一", ["神经募集", "肩背控制", "核心旋转", "连续输出能力"])}
+      </div>
+      <div class="pager">
+        <a class="ghost" href="#fitness-fuel">饮食</a>
+        <a class="button" href="#fitness">返回</a>
+        <a class="ghost" href="#fitness-ai">AI</a>
+      </div>
+    </section>
+  `, "");
+}
+
+function renderFitnessAI() {
+  return shell("fitness", "AI准则", "防止过度恢复，也防止硬顶", `
+    <section class="list">
+      <div class="hint">AI的任务是长期稳定累积刺激，最终出现明显训练痕迹。</div>
+      <div class="list-stack">
+        ${systemCard("每日职责", "先判断再开练", ["判断训练等级", "调整刺激", "跟踪动作/重量/组次/RPE", "观察恢复与体重趋势"])}
+        ${systemCard("必须避免", "别让系统跑偏", ["长期低刺激", "动作漂移", "长期不加重量", "情绪化追PR"])}
+        ${systemCard("最终方向", "不是每天完美状态", ["防止过度恢复", "防止过度硬顶", "不把状态差当逃避", "宽松衣服下仍有训练痕迹"])}
+      </div>
+      <div class="pager">
+        <a class="ghost" href="#fitness-boxing">拳击</a>
+        <a class="button" href="#fitness">返回</a>
+        <a class="ghost" href="#fitness-plan">计划</a>
+      </div>
+    </section>
+  `, "");
+}
+
+function systemCard(title, sub, points) {
+  return `
+    <article class="list-card">
+      <header><div><h3>${title}</h3><p>${sub}</p></div></header>
+      <div class="pills">${points.slice(0, 4).map((point) => `<span class="pill">${escapeHtml(point)}</span>`).join("")}</div>
+    </article>
+  `;
 }
 
 function shell(back, title, sub, content, nav, isHome = false) {

@@ -233,6 +233,11 @@ a {
   min-height: 0;
 }
 
+.action-grid.dense {
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr;
+}
+
 .card {
   display: grid;
   align-content: center;
@@ -241,9 +246,27 @@ a {
   padding: 15px;
 }
 
+.dense .card {
+  gap: 4px;
+  padding: 10px;
+}
+
 .card small {
   color: var(--leaf);
   font-weight: 800;
+}
+
+.dense .card small {
+  font-size: 11px;
+}
+
+.dense .card h3 {
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.dense .card p {
+  font-size: 10px;
 }
 
 .list {
