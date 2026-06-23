@@ -20,6 +20,6 @@
 
 数据默认保存在当前浏览器本地。换设备前，请在网站的“设置与备份”里导出 JSON。
 
-推荐短仓库名：`xqj`。部署后的链接通常是：
+推荐仓库名：`hobbylog`。部署后的链接通常是：
 
-`https://你的GitHub用户名.github.io/xqj/`
+`https://你的GitHub用户名.github.io/hobbylog/`
