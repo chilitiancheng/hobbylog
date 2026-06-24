@@ -434,6 +434,7 @@ textarea:focus {
 
 .fitness-home,
 .crochet-home,
+.bird-home,
 .question-screen,
 .result-screen {
   display: grid;
@@ -448,6 +449,10 @@ textarea:focus {
 
 .crochet-home {
   grid-template-rows: 1fr 1fr auto auto;
+}
+
+.bird-home {
+  grid-template-rows: 1fr 1fr 1fr auto;
 }
 
 .fitness-home.has-plan {
@@ -547,6 +552,70 @@ textarea:focus {
 .crochet-tile {
   background: linear-gradient(110deg, rgba(96, 119, 90, .88), rgba(205, 181, 92, .78));
   border-color: rgba(205, 181, 92, .65);
+}
+
+.bird-tile {
+  background: linear-gradient(110deg, rgba(120, 150, 161, .88), rgba(232, 220, 199, .74));
+  border-color: rgba(120, 150, 161, .35);
+}
+
+.pending-tile {
+  color: var(--ink);
+  background: rgba(255, 250, 240, .9);
+}
+
+.bird-snapshot {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  min-height: 0;
+}
+
+.bird-snapshot a {
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  min-height: 0;
+  padding: 14px;
+  background: rgba(255, 250, 240, .82);
+  border: 1px solid rgba(224, 210, 184, .92);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+}
+
+.bird-snapshot span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.bird-snapshot strong {
+  color: var(--leaf-dark);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.bird-snapshot p {
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.confirm-button {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.life-card header strong {
+  color: var(--leaf-dark);
+  font-size: 28px;
+}
+
+.detail-actions {
+  grid-template-columns: repeat(2, 1fr);
 }
 
 .project-detail-card h3 {

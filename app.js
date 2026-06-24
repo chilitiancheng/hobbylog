@@ -84,14 +84,7 @@ document.addEventListener("input", onInput);
 
 const routes = {
   home: renderHome,
-  birding: () => modulePage("观鸟", "把遇见留在地点、季节和羽色里", birdStats(), [
-    ["新增观察", "bird-log", "记录今天看见什么"],
-    ["观鸟计划", "bird-plan", "下次去哪里、带什么"],
-    ["待确认", "bird-pending", "留住还没认出的瞬间"],
-    ["地点", "bird-location", "整理常去的观察点"],
-    ["鸟种库", "list-birds", "常见鸟与个人记录"],
-    ["观察日志", "list-birdlogs", "按时间回看"]
-  ]),
+  birding: renderBirding,
   fitness: renderFitness,
   "fitness-checkin": renderFitnessCheckin,
   "fitness-result": renderFitnessResult,
@@ -115,6 +108,7 @@ const routes = {
     ["species", "鸟种", "text", "", "白鹭"],
     ["location", "地点", "text", "", "河边湿地"],
     ["count", "数量", "number", "1"],
+    ["certainty", "确认", "select", "确定", "确定|待确认"],
     ["note", "备注", "textarea", "", "行为、天气、识别依据"]
   ], afterBirdLog),
   "bird-plan": () => formPage("观鸟计划", "birding", "plans", "birding", [
@@ -124,9 +118,12 @@ const routes = {
     ["gear", "装备", "text", "", "望远镜, 相机"],
     ["note", "备注", "textarea", "", "路线、天气、提醒"]
   ]),
-  "bird-pending": () => formPage("待确认照片", "birding", "pendingPhotos", "birding", [
+  "bird-pending": renderBirdPending,
+  "bird-pending-new": () => formPage("新增待确认", "birding", "pendingPhotos", "bird-pending", [
     ["date", "日期", "date", today()],
     ["candidate", "候选鸟种", "text", "", "柳莺属？"],
+    ["location", "地点", "text", "", "河边湿地"],
+    ["count", "数量", "number", "1"],
     ["photo", "照片引用", "text", "", "链接或文件名"],
     ["reason", "判断依据", "text", "", "翼斑、嘴型"],
     ["note", "不确定点", "textarea", "", "还需要确认什么"]
@@ -173,6 +170,7 @@ const routes = {
   ]),
   "list-birdlogs": () => listPageView("观察日志", "birding", "logs", "birding", birdLogCard),
   "list-birds": () => listPageView("鸟种库", "birding", "birds", "birding", birdCard),
+  "bird-life": renderBirdLife,
   "list-projects": () => listPageView("作品列表", "crochet", "projects", "crochet", projectCard),
   "crochet-detail": renderCrochetDetail,
   calendar: renderCalendar,
@@ -316,6 +314,73 @@ function renderFitnessResult() {
   `, "");
 }
 
+function renderBirding() {
+  const latest = data.birding.logs[0];
+  const pending = data.birding.pendingPhotos.length;
+  const seenCount = seenBirds().length;
+  return shell("home", "观鸟", "先记下遇见，再慢慢确认", `
+    <section class="bird-home">
+      <a class="primary-tile bird-tile" href="#bird-log">
+        <strong>快速记录</strong>
+        <span>${latest ? `最近：${latest.species || "未知鸟"} · ${latest.location || "未填地点"}` : "鸟种、地点、数量、确定程度"}</span>
+      </a>
+      <a class="primary-tile pending-tile" href="#bird-pending">
+        <strong>待确认</strong>
+        <span>${pending ? `${pending} 条还需要回看` : "把不确定留在这里"}</span>
+      </a>
+      <div class="bird-snapshot">
+        <a href="#bird-life">
+          <span>Life List</span>
+          <strong>${seenCount}</strong>
+          <p>已经遇见的鸟种</p>
+        </a>
+        <a href="#list-birdlogs">
+          <span>观察</span>
+          <strong>${data.birding.logs.length}</strong>
+          <p>按时间回看</p>
+        </a>
+      </div>
+      <div class="mini-actions">
+        <a class="ghost" href="#bird-plan">计划</a>
+        <a class="ghost" href="#bird-location">地点</a>
+      </div>
+    </section>
+  `, bottomNav());
+}
+
+function renderBirdPending() {
+  const items = data.birding.pendingPhotos.slice(0, 3);
+  return shell("birding", "待确认", `${data.birding.pendingPhotos.length} 条`, `
+    <section class="list">
+      <div class="list-stack">
+        ${items.length ? items.map(pendingBirdCard).join("") : `<div class="compact-note"><h2>没有待确认</h2><p>下次看见拿不准的鸟，就先放这里。</p></div>`}
+      </div>
+      <div class="pager">
+        <a class="ghost" href="#bird-pending-new">新增</a>
+        <a class="button" href="#birding">返回</a>
+        <a class="ghost" href="#bird-log">记录</a>
+      </div>
+    </section>
+  `, "");
+}
+
+function renderBirdLife() {
+  const birds = seenBirds();
+  const visible = birds.slice(0, 4);
+  return shell("birding", "Life List", `${birds.length} 种`, `
+    <section class="list">
+      <div class="list-stack life-list">
+        ${visible.length ? visible.map(lifeBirdCard).join("") : `<div class="compact-note"><h2>还没有鸟种</h2><p>新增一次观察后，这里会自动沉淀。</p></div>`}
+      </div>
+      <div class="pager">
+        <a class="ghost" href="#bird-log">新增</a>
+        <a class="button" href="#birding">返回</a>
+        <a class="ghost" href="#list-birds">常见鸟</a>
+      </div>
+    </section>
+  `, "");
+}
+
 function renderCrochet() {
   const project = currentCrochetProject();
   const session = latestCrochetSession(project?.name);
@@ -371,10 +436,9 @@ function renderCrochetDetail() {
         ${project.next ? detailCard("下一步", project.next, ["继续这里"]) : ""}
         ${sessions.length ? sessions.map((session) => detailCard(`打卡-${session.date}`, session.progress || session.note, ["钩织"])).join("") : detailCard("暂无打卡", "从今日钩织打卡开始记录。", ["空"])}
       </div>
-      <div class="pager">
+      <div class="mini-actions detail-actions">
         <a class="ghost" href="#project">编辑</a>
         <a class="button" href="#crochet-session">打卡</a>
-        <a class="ghost" href="#calendar">日历</a>
       </div>
     </section>
   `, "");
@@ -668,6 +732,14 @@ function onClick(event) {
     return;
   }
 
+  const confirmBird = event.target.closest("[data-confirm-bird]");
+  if (confirmBird) {
+    confirmPendingBird(confirmBird.dataset.confirmBird);
+    saveData();
+    render();
+    return;
+  }
+
   const pageButton = event.target.closest("[data-page]");
   if (pageButton) {
     listPage = Math.max(0, listPage + Number(pageButton.dataset.page));
@@ -796,8 +868,72 @@ function afterBirdLog(item) {
   }
 }
 
+function confirmPendingBird(itemId) {
+  const pending = data.birding.pendingPhotos.find((item) => item.id === itemId);
+  if (!pending) return;
+  const species = pending.candidate || "待确认鸟种";
+  const log = {
+    id: id(),
+    date: pending.date || today(),
+    time: nowTime(),
+    species,
+    location: pending.location || "",
+    count: pending.count || "1",
+    certainty: "确定",
+    note: [pending.reason, pending.note, pending.photo && `照片：${pending.photo}`].filter(Boolean).join("；")
+  };
+  data.birding.logs.unshift(log);
+  removeItem("birding.pendingPhotos", itemId);
+  afterBirdLog(log);
+}
+
+function seenBirds() {
+  const grouped = new Map();
+  data.birding.logs.forEach((log) => {
+    const name = log.species || "未命名鸟种";
+    const current = grouped.get(name) || { name, count: 0, first: log.date, latest: log.date, location: log.location || "", pending: 0 };
+    current.count += 1;
+    if (log.certainty === "待确认") current.pending += 1;
+    if (log.date && (!current.first || log.date < current.first)) current.first = log.date;
+    if (log.date && (!current.latest || log.date > current.latest)) {
+      current.latest = log.date;
+      current.location = log.location || current.location;
+    }
+    grouped.set(name, current);
+  });
+  return [...grouped.values()].sort((a, b) => (b.latest || "").localeCompare(a.latest || ""));
+}
+
+function pendingBirdCard(item) {
+  return `
+    <article class="list-card pending-card">
+      <header>
+        <div><h3>${escapeHtml(item.candidate || "未知鸟")}</h3><p>${escapeHtml(item.date || "")}</p></div>
+        <button class="ghost" data-delete="birding.pendingPhotos" data-id="${item.id}">删</button>
+      </header>
+      <div class="pills">${[item.location, item.count && `${item.count}只`, item.reason].filter(Boolean).map((pill) => `<span class="pill">${escapeHtml(pill)}</span>`).join("")}</div>
+      ${item.note ? `<p>${escapeHtml(item.note)}</p>` : ""}
+      <button class="button confirm-button" data-confirm-bird="${item.id}">确认成观察</button>
+    </article>
+  `;
+}
+
+function lifeBirdCard(item) {
+  return `
+    <article class="list-card life-card">
+      <header>
+        <div><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.location || "未填地点")}</p></div>
+        <strong>${item.count}</strong>
+      </header>
+      <div class="pills">
+        ${[item.first && `初见 ${item.first}`, item.latest && `最近 ${item.latest}`, item.pending ? `${item.pending} 待确认` : ""].filter(Boolean).map((pill) => `<span class="pill">${escapeHtml(pill)}</span>`).join("")}
+      </div>
+    </article>
+  `;
+}
+
 function birdLogCard(item, path) {
-  return card(item, path, item.species || "未命名鸟种", item.date || "", [item.location, item.count && `${item.count}只`], item.note);
+  return card(item, path, item.species || "未命名鸟种", item.date || "", [item.location, item.count && `${item.count}只`, item.certainty], item.note);
 }
 
 function birdCard(item, path) {
