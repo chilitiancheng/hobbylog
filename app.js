@@ -233,6 +233,7 @@ function renderHome() {
     <section class="home-hero">
       <div class="home-copy">
         <p class="home-kicker"><em>Keep what made today feel alive.</em></p>
+        <img class="home-bird-mark" src="assets/pigeon-home.webp" alt="">
       </div>
       <div class="today-summary" aria-label="Today summary">
         <a class="summary-row" href="#fitness">
