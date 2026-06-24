@@ -88,6 +88,7 @@ const routes = {
   fitness: renderFitness,
   "fitness-checkin": renderFitnessCheckin,
   "fitness-result": renderFitnessResult,
+  "fitness-plan": renderFitnessPlan,
   workout: () => formPage("训练打卡", "fitness", "workouts", "fitness", [
     ["date", "日期", "date", today()],
     ["exercise", "动作", "text", "", "深蹲"],
@@ -242,19 +243,21 @@ function renderHome() {
 
 function renderFitness() {
   const latest = latestFitnessPlan();
+  const todaysPlan = todayFitnessPlan();
+  const checklist = todaysPlan ? fitnessChecklist(todaysPlan, { limit: 4, compact: true }) : "";
+  const completed = todaysPlan ? fitnessPlanProgress(todaysPlan) : { done: 0, total: 0 };
   const theme = todayTheme();
-  const main = latest ? `
-      <div class="fitness-plan-main level-${latest.level}">
+  const main = todaysPlan ? `
+      <div class="fitness-plan-main level-${todaysPlan.level || "A"}">
         <div class="fitness-plan-head">
-          <strong>${latest.level}级</strong>
-          <span>${latest.summary}</span>
+          <strong>${escapeHtml(todaysPlan.level || "计划")}</strong>
+          <span>${escapeHtml(todaysPlan.summary || (completed.total ? `${completed.done}/${completed.total} 已完成` : "今日待办"))}</span>
         </div>
         <div class="plan-card">
           <span>今日计划</span>
-          <h2>${latest.title}</h2>
-          <div class="plan-lines">
-            ${latest.lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("")}
-          </div>
+          <h2>${escapeHtml(todaysPlan.title || todaysPlan.theme || "今日训练")}</h2>
+          ${checklist}
+          ${completed.total && completed.done === completed.total ? `<p class="done-banner">今日完成</p>` : ""}
         </div>
       </div>
     ` : `
@@ -264,7 +267,7 @@ function renderFitness() {
       </a>
     `;
   return shell("home", "健身", "今天先判断，再训练", `
-    <section class="fitness-home ${latest ? "has-plan" : ""}">
+    <section class="fitness-home ${todaysPlan ? "has-plan" : ""}">
       <div class="today-card">
         <span>今日主题</span>
         <strong>${theme.label}</strong>
@@ -272,12 +275,32 @@ function renderFitness() {
       </div>
       ${main}
       <div class="mini-actions">
-        ${latest ? `<a class="ghost" href="#fitness-checkin" data-reset-checkin="1">重测</a>` : ""}
-        <a class="ghost" href="#workout">训练打卡</a>
-        <a class="ghost" href="#body">身体数据</a>
+        <a class="ghost" href="#fitness-checkin" data-reset-checkin="1">${latest ? "重测" : "状态判断"}</a>
+        <a class="button" href="#fitness-plan">${todaysPlan ? "编辑计划" : "粘贴计划"}</a>
+        <a class="ghost" href="#workout">训练记录</a>
       </div>
     </section>
   `, bottomNav());
+}
+
+function renderFitnessPlan() {
+  const plan = fitnessPlanByDate(today());
+  const items = normalizePlanItems(plan).map((item) => item.text).join("\n");
+  return shell("fitness", plan ? "编辑今日计划" : "粘贴计划", "保存为待办清单", `
+    <form class="form fitness-plan-form" data-fitness-plan-form>
+      <div class="field"><label>日期</label><input name="date" type="date" value="${escapeHtml(plan?.date || today())}"></div>
+      <div class="field"><label>主题</label><input name="theme" type="text" value="${escapeHtml(plan?.theme || todayTheme().label)}" placeholder="下肢 / 上肢 / 恢复"></div>
+      <div class="field"><label>等级</label><select name="level">
+        ${["", "S", "A", "B", "C", "D"].map((level) => `<option value="${level}" ${level === (plan?.level || "") ? "selected" : ""}>${level || "不填"}</option>`).join("")}
+      </select></div>
+      <div class="field full"><label>计划正文</label><textarea name="body" placeholder="每行一个待办，例如：&#10;热身 8 分钟&#10;深蹲 3 组&#10;拉伸">${escapeHtml(items)}</textarea></div>
+      <div class="form-actions">
+        <a class="ghost" href="#fitness">取消</a>
+        <button class="button" type="submit">保存计划</button>
+        <a class="ghost" href="#workout">训练记录</a>
+      </div>
+    </form>
+  `, "");
 }
 
 function renderFitnessCheckin() {
@@ -712,6 +735,15 @@ function field([name, label, type, value = "", placeholder = ""]) {
 }
 
 function onSubmit(event) {
+  const fitnessPlanForm = event.target.closest("[data-fitness-plan-form]");
+  if (fitnessPlanForm) {
+    event.preventDefault();
+    saveFitnessPlan(fitnessPlanForm);
+    saveData();
+    location.hash = "fitness";
+    return;
+  }
+
   const editForm = event.target.closest("[data-edit-form]");
   if (editForm) {
     event.preventDefault();
@@ -734,6 +766,14 @@ function onSubmit(event) {
 }
 
 function onClick(event) {
+  const fitnessItem = event.target.closest("[data-fitness-item]");
+  if (fitnessItem) {
+    toggleFitnessItem(fitnessItem.dataset.planId, fitnessItem.dataset.fitnessItem);
+    saveData();
+    render();
+    return;
+  }
+
   const reset = event.target.closest("[data-reset-checkin]");
   if (reset) {
     checkinDraft = { step: 0, answers: {} };
@@ -928,7 +968,8 @@ function finishCheckin() {
     level: result.level,
     title: plan.title,
     summary: result.summary,
-    lines: plan.lines
+    lines: plan.lines,
+    items: linesToPlanItems(plan.lines)
   });
   saveData();
   location.hash = "fitness-result";
@@ -982,6 +1023,92 @@ function todayTheme(date = new Date()) {
 
 function latestFitnessPlan() {
   return data.fitness.dailyPlans?.[0] || null;
+}
+
+function todayFitnessPlan() {
+  return fitnessPlanByDate(today()) || latestFitnessPlan();
+}
+
+function fitnessPlanByDate(date) {
+  return data.fitness.dailyPlans?.find((plan) => plan.date === date) || null;
+}
+
+function normalizePlanItems(plan) {
+  if (!plan) return [];
+  if (Array.isArray(plan.items) && plan.items.length) {
+    return plan.items.map((item, index) => ({
+      id: item.id || `item-${index}`,
+      text: item.text || "",
+      done: Boolean(item.done)
+    })).filter((item) => item.text.trim());
+  }
+  return linesToPlanItems(plan.lines || []);
+}
+
+function linesToPlanItems(lines) {
+  return (lines || [])
+    .map((line) => String(line).trim())
+    .filter(Boolean)
+    .map((text, index) => ({ id: `line-${index}`, text, done: false, order: index }));
+}
+
+function fitnessPlanProgress(plan) {
+  const items = normalizePlanItems(plan);
+  return { done: items.filter((item) => item.done).length, total: items.length };
+}
+
+function fitnessChecklist(plan, options = {}) {
+  const items = normalizePlanItems(plan);
+  if (!items.length) return `<p class="plan-empty">今天还没有待办。</p>`;
+  const limit = options.limit || items.length;
+  const visible = items.slice(0, limit);
+  const hidden = Math.max(0, items.length - visible.length);
+  return `
+    <div class="fitness-checklist ${options.compact ? "compact" : ""}">
+      ${visible.map((item) => `
+        <button class="check-item ${item.done ? "done" : ""}" type="button" data-plan-id="${plan.id}" data-fitness-item="${item.id}">
+          <span class="check-box">${item.done ? "✓" : ""}</span>
+          <span>${escapeHtml(item.text)}</span>
+        </button>
+      `).join("")}
+      ${hidden ? `<a class="check-more" href="#fitness-plan">还有 ${hidden} 项，进入计划详情</a>` : ""}
+    </div>
+  `;
+}
+
+function saveFitnessPlan(form) {
+  const values = Object.fromEntries(new FormData(form).entries());
+  const date = values.date || today();
+  const rawLines = String(values.body || "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const existing = data.fitness.dailyPlans?.find((plan) => plan.date === date);
+  const previousItems = new Map(normalizePlanItems(existing).map((item) => [item.text, item]));
+  const items = rawLines.map((text, index) => {
+    const old = previousItems.get(text);
+    return { id: old?.id || id(), text, done: old?.done || false, order: index };
+  });
+  const plan = existing || { id: id(), date, time: nowTime() };
+  Object.assign(plan, {
+    date,
+    time: plan.time || nowTime(),
+    theme: values.theme || "手动计划",
+    level: values.level || "",
+    title: values.theme || "手动计划",
+    summary: "手动粘贴计划",
+    lines: rawLines,
+    items,
+    updatedAt: new Date().toISOString()
+  });
+  if (!existing) data.fitness.dailyPlans.unshift(plan);
+}
+
+function toggleFitnessItem(planId, itemId) {
+  const plan = data.fitness.dailyPlans?.find((item) => item.id === planId);
+  if (!plan) return;
+  plan.items = normalizePlanItems(plan);
+  const item = plan.items.find((entry) => entry.id === itemId);
+  if (!item) return;
+  item.done = !item.done;
+  plan.updatedAt = new Date().toISOString();
 }
 
 function afterBirdLog(item) {
@@ -1188,7 +1315,11 @@ function crochetStats() {
 function calendarTimeline() {
   const events = [
     ...data.birding.logs.map((x) => ({ date: x.date, time: x.time || "08:00", label: `观鸟-${x.species || "记录"}`, detail: x.location || x.note || "", type: "观鸟", kind: "birding", group: "birding", list: "logs", id: x.id, photoSrc: photoSrc(x) })),
-    ...data.fitness.dailyPlans.map((x) => ({ date: x.date, time: x.time || "09:00", label: `健身-${x.theme}`, detail: `${x.level}级 ${x.title}`, type: "健身", kind: "fitness", group: "fitness", list: "dailyPlans", id: x.id })),
+    ...data.fitness.dailyPlans.map((x) => {
+      const progress = fitnessPlanProgress(x);
+      const detail = [`${x.level ? `${x.level}级 ` : ""}${x.title || x.theme || "计划"}`, progress.total ? `${progress.done}/${progress.total} 已完成` : ""].filter(Boolean).join(" · ");
+      return { date: x.date, time: x.time || "09:00", label: `健身-${x.theme || "计划"}`, detail, type: "健身", kind: "fitness", group: "fitness", list: "dailyPlans", id: x.id };
+    }),
     ...data.fitness.workouts.map((x) => ({ date: x.date, time: x.time || "20:00", label: `健身-${x.exercise || "打卡"}`, detail: x.load || x.note || "", type: "健身", kind: "fitness", group: "fitness", list: "workouts", id: x.id })),
     ...data.crochet.sessions.map((x) => ({ date: x.date, time: x.time || "21:00", label: `钩织-${x.projectName || "打卡"}`, detail: x.progress || x.note || "", type: "钩织", kind: "crochet", group: "crochet", list: "sessions", id: x.id }))
   ].filter((x) => x.date);

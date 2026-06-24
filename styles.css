@@ -853,9 +853,11 @@ textarea:focus {
   min-height: 0;
   padding: 12px;
   box-shadow: none;
+  overflow: hidden;
 }
 
 .fitness-plan-main .plan-card h2 {
+  margin: 4px 0 8px;
   font-size: 20px;
 }
 
@@ -866,6 +868,103 @@ textarea:focus {
 .fitness-plan-main .plan-lines p {
   font-size: 12px;
   line-height: 1.32;
+}
+
+.fitness-checklist {
+  display: grid;
+  gap: 7px;
+  min-height: 0;
+}
+
+.fitness-checklist.compact {
+  overflow: hidden;
+}
+
+.check-item {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  align-items: start;
+  gap: 8px;
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 8px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, .46);
+  border: 1px solid rgba(224, 210, 184, .85);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.check-box {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  color: #fff;
+  background: rgba(96, 119, 90, .12);
+  border: 1px solid rgba(96, 119, 90, .45);
+  border-radius: 7px;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.check-item span:last-child {
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.check-item.done {
+  color: rgba(47, 52, 45, .52);
+}
+
+.check-item.done .check-box {
+  background: var(--leaf);
+  border-color: var(--leaf);
+}
+
+.check-item.done span:last-child {
+  text-decoration: line-through;
+}
+
+.check-more,
+.done-banner,
+.plan-empty {
+  margin: 0;
+  color: var(--leaf-dark);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.check-more {
+  display: block;
+  padding: 3px 2px 0;
+}
+
+.done-banner {
+  margin-top: 7px;
+  padding: 7px 9px;
+  background: rgba(96, 119, 90, .12);
+  border-radius: 10px;
+}
+
+.fitness-plan-form {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.fitness-plan-form .field.full {
+  min-height: 0;
+}
+
+.fitness-plan-form textarea {
+  min-height: 190px;
+  height: min(38dvh, 280px);
+  resize: none;
 }
 
 .question-screen,
