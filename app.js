@@ -109,13 +109,7 @@ const routes = {
     ["fat", "体脂", "text", "", "%"],
     ["note", "状态", "textarea", "", "睡眠、疲劳、饮食"]
   ]),
-  crochet: () => modulePage("钩织", "让线、图解和作品慢慢成形", crochetStats(), [
-    ["作品项目", "project", "记录一件作品"],
-    ["钩织打卡", "crochet-session", "今天有没有织"],
-    ["图解收藏", "pattern", "保存想做的灵感"],
-    ["材料库存", "inventory", "毛线颜色和数量"],
-    ["作品列表", "list-projects", "查看进行中的作品"]
-  ]),
+  crochet: renderCrochet,
   "bird-log": () => formPage("新增观察", "birding", "logs", "birding", [
     ["date", "日期", "date", today()],
     ["species", "鸟种", "text", "", "白鹭"],
@@ -146,12 +140,16 @@ const routes = {
   ]),
   project: () => formPage("钩织作品", "crochet", "projects", "crochet", [
     ["name", "作品名", "text", "", "春日杯垫"],
+    ["type", "类型", "text", "", "毯子 / 围巾 / 玩偶"],
+    ["status", "状态", "select", "进行中", "想做|进行中|暂停|完成"],
     ["progress", "进度", "text", "", "35%"],
     ["material", "材料", "text", "", "棉线"],
     ["start", "开始", "date", today()],
     ["expectedEnd", "预计结束", "date", offsetDate(14)],
     ["end", "完成日", "date", ""],
-    ["note", "备注", "textarea", "", "针法、图片引用、想法"]
+    ["blocker", "卡点", "text", "", "边缘不平 / 配色犹豫"],
+    ["next", "下一步", "text", "", "继续第12行"],
+    ["note", "备注", "textarea", "", "针法、图解、图片引用"]
   ]),
   "crochet-session": () => formPage("钩织打卡", "crochet", "sessions", "crochet", [
     ["date", "日期", "date", today()],
@@ -176,6 +174,7 @@ const routes = {
   "list-birdlogs": () => listPageView("观察日志", "birding", "logs", "birding", birdLogCard),
   "list-birds": () => listPageView("鸟种库", "birding", "birds", "birding", birdCard),
   "list-projects": () => listPageView("作品列表", "crochet", "projects", "crochet", projectCard),
+  "crochet-detail": renderCrochetDetail,
   calendar: renderCalendar,
   "calendar-day": renderCalendarDay,
   "calendar-edit": renderCalendarEdit,
@@ -312,6 +311,70 @@ function renderFitnessResult() {
         <a class="ghost" href="#fitness-checkin" data-reset-checkin="1">重测</a>
         <a class="button" href="#fitness">查看计划</a>
         <a class="ghost" href="#workout">记录</a>
+      </div>
+    </section>
+  `, "");
+}
+
+function renderCrochet() {
+  const project = currentCrochetProject();
+  const session = latestCrochetSession(project?.name);
+  return shell("home", "钩织", "作品进度台", `
+    <section class="crochet-home">
+      ${project ? `
+        <button class="project-hero" data-project-detail="${project.id}">
+          <span>当前作品</span>
+          <strong>${escapeHtml(project.name)}</strong>
+          <p>${escapeHtml(project.progress || project.status || "进行中")}</p>
+          <div class="pills">
+            ${[project.type, project.material, project.start && `${project.start} 开始`].filter(Boolean).map((item) => `<span class="pill">${escapeHtml(item)}</span>`).join("")}
+          </div>
+        </button>
+      ` : `
+        <a class="project-hero" href="#project">
+          <span>当前作品</span>
+          <strong>新建第一件作品</strong>
+          <p>从开工日期开始，日历会出现连续色带。</p>
+        </a>
+      `}
+      <a class="primary-tile crochet-tile" href="#crochet-session">
+        <strong>今日钩织打卡</strong>
+        <span>${session ? `最近：${session.date} ${session.progress || session.note || ""}` : "记录今天推进了什么"}</span>
+      </a>
+      <div class="mini-actions">
+        <a class="ghost" href="#project">新建作品</a>
+        <a class="ghost" href="#list-projects">作品列表</a>
+      </div>
+      <div class="mini-actions">
+        <a class="ghost" href="#pattern">图解</a>
+        <a class="ghost" href="#inventory">材料</a>
+      </div>
+    </section>
+  `, bottomNav());
+}
+
+function renderCrochetDetail() {
+  const project = findItem("crochet", "projects", data.crochet.selectedProjectId) || currentCrochetProject();
+  if (!project) return renderCrochet();
+  const sessions = data.crochet.sessions.filter((session) => session.projectName === project.name).slice(0, 3);
+  return shell("crochet", project.name, "作品详情", `
+    <section class="list">
+      <div class="list-stack">
+        <article class="list-card project-detail-card">
+          <h3>${escapeHtml(project.progress || project.status || "进行中")}</h3>
+          <p>${escapeHtml(project.note || "还没有备注。")}</p>
+          <div class="pills">
+            ${[project.type, project.material, project.start, project.expectedEnd || project.end].filter(Boolean).map((item) => `<span class="pill">${escapeHtml(item)}</span>`).join("")}
+          </div>
+        </article>
+        ${project.blocker ? detailCard("当前卡点", project.blocker, ["需要处理"]) : ""}
+        ${project.next ? detailCard("下一步", project.next, ["继续这里"]) : ""}
+        ${sessions.length ? sessions.map((session) => detailCard(`打卡-${session.date}`, session.progress || session.note, ["钩织"])).join("") : detailCard("暂无打卡", "从今日钩织打卡开始记录。", ["空"])}
+      </div>
+      <div class="pager">
+        <a class="ghost" href="#project">编辑</a>
+        <a class="button" href="#crochet-session">打卡</a>
+        <a class="ghost" href="#calendar">日历</a>
       </div>
     </section>
   `, "");
@@ -589,6 +652,14 @@ function onClick(event) {
     return;
   }
 
+  const projectDetail = event.target.closest("[data-project-detail]");
+  if (projectDetail) {
+    data.crochet.selectedProjectId = projectDetail.dataset.projectDetail;
+    saveData();
+    location.hash = "crochet-detail";
+    return;
+  }
+
   const deleteButton = event.target.closest("[data-delete]");
   if (deleteButton) {
     removeItem(deleteButton.dataset.delete, deleteButton.dataset.id);
@@ -742,7 +813,17 @@ function workoutCard(item, path) {
 }
 
 function projectCard(item, path) {
-  return card(item, path, item.name || "钩织作品", item.progress || "", [item.material, item.start, item.expectedEnd || item.end], item.note);
+  return `
+    <article class="list-card" data-project-detail="${item.id}">
+      <header>
+        <div><h3>${escapeHtml(item.name || "钩织作品")}</h3><p>${escapeHtml(item.progress || item.status || "")}</p></div>
+        <button class="ghost" data-delete="${path}" data-id="${item.id}">删</button>
+      </header>
+      <div class="pills">${[item.type, item.material, item.start, item.expectedEnd || item.end].filter(Boolean).map((pill) => `<span class="pill">${escapeHtml(pill)}</span>`).join("")}</div>
+      ${item.note ? `<p>${escapeHtml(item.note)}</p>` : ""}
+      <small class="edit-hint">点按查看作品详情</small>
+    </article>
+  `;
 }
 
 function detailCard(title, sub, pills, editTarget) {
@@ -927,6 +1008,14 @@ function merge(base, extra) {
 
 function firstProjectName() {
   return data.crochet.projects[0]?.name || "";
+}
+
+function currentCrochetProject() {
+  return data.crochet.projects.find((project) => project.status === "进行中") || data.crochet.projects[0] || null;
+}
+
+function latestCrochetSession(projectName) {
+  return data.crochet.sessions.find((session) => !projectName || session.projectName === projectName) || null;
 }
 
 function clone(value) {

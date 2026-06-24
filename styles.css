@@ -433,6 +433,7 @@ textarea:focus {
 }
 
 .fitness-home,
+.crochet-home,
 .question-screen,
 .result-screen {
   display: grid;
@@ -445,12 +446,17 @@ textarea:focus {
   grid-template-rows: auto 1fr auto;
 }
 
+.crochet-home {
+  grid-template-rows: 1fr 1fr auto auto;
+}
+
 .fitness-home.has-plan {
   grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
 .today-card,
 .primary-tile,
+.project-hero,
 .result-mini,
 .question-card,
 .grade-card,
@@ -508,6 +514,43 @@ textarea:focus {
 .primary-tile span {
   margin-top: 8px;
   font-size: 13px;
+}
+
+.project-hero {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  min-height: 0;
+  padding: 18px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.project-hero span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.project-hero strong {
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.project-hero p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.crochet-tile {
+  background: linear-gradient(110deg, rgba(96, 119, 90, .88), rgba(205, 181, 92, .78));
+  border-color: rgba(205, 181, 92, .65);
+}
+
+.project-detail-card h3 {
+  font-size: 24px;
 }
 
 .mini-actions {
