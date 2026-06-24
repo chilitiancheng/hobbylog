@@ -1,49 +1,78 @@
-const STORE_KEY = "interest-home-v3";
-const OLD_KEYS = ["interest-home-v2", "interest-home-v1"];
+const STORE_KEY = "interest-home-v4";
+const OLD_KEYS = ["interest-home-v3", "interest-home-v2", "interest-home-v1"];
 const app = document.querySelector("#app");
 
 const seedBirds = [
   ["麻雀", "Passer montanus", "城市里最常见，群体活动。"],
-  ["喜鹊", "Pica pica", "黑白羽色，长尾，常在树梢鸣叫。"],
+  ["喜鹊", "Pica pica", "黑白羽色，长尾。"],
   ["灰喜鹊", "Cyanopica cyanus", "蓝灰色长尾，常成群。"],
   ["乌鸫", "Turdus mandarinus", "雄鸟通体黑色，嘴橙黄。"],
-  ["白头鹎", "Pycnonotus sinensis", "头顶白斑，城市绿地常见。"],
+  ["白头鹎", "Pycnonotus sinensis", "城市绿地常见。"],
   ["珠颈斑鸠", "Spilopelia chinensis", "颈侧有珠点状斑纹。"],
-  ["家燕", "Hirundo rustica", "叉尾，春夏常在空中捕虫。"],
+  ["家燕", "Hirundo rustica", "叉尾，春夏常见。"],
   ["白鹭", "Egretta garzetta", "湿地常见，黑嘴黑脚。"],
-  ["池鹭", "Ardeola bacchus", "繁殖羽栗红，飞起时白翼明显。"],
-  ["夜鹭", "Nycticorax nycticorax", "傍晚活跃，红眼灰背。"],
+  ["池鹭", "Ardeola bacchus", "飞起时白翼明显。"],
+  ["夜鹭", "Nycticorax nycticorax", "傍晚活跃。"],
   ["普通翠鸟", "Alcedo atthis", "蓝绿色背，常贴水飞行。"],
   ["黑水鸡", "Gallinula chloropus", "红额甲，池塘湿地常见。"],
   ["小䴙䴘", "Tachybaptus ruficollis", "小型水鸟，常潜水。"],
   ["大山雀", "Parus major", "黑色头顶和胸中线。"],
-  ["棕背伯劳", "Lanius schach", "有黑色眼罩，常停在枝头。"],
+  ["棕背伯劳", "Lanius schach", "黑色眼罩，常停在枝头。"],
   ["戴胜", "Upupa epops", "羽冠醒目，嘴长下弯。"]
 ];
 
 const baseData = {
   birding: {
-    logs: [{ id: id(), date: today(), species: "白鹭", location: "河边湿地", count: "3", note: "清晨觅食，水面很安静。" }],
+    logs: [{ id: id(), date: today(), time: nowTime(), species: "白鹭", location: "河边湿地", count: "3", note: "清晨觅食，水面很安静。" }],
     birds: seedBirds.map(([name, scientific, note]) => ({ id: id(), name, scientific, note })),
     locations: [{ id: id(), name: "河边湿地", habitat: "湿地", note: "清晨人少，适合慢慢看。" }],
     plans: [],
     pendingPhotos: []
   },
   fitness: {
-    plans: [{ id: id(), date: today(), title: "轻力量恢复", status: "计划中", note: "先留一个入口，等你发正式计划。" }],
+    plans: [{ id: id(), date: today(), time: nowTime(), title: "轻力量恢复", status: "计划中", note: "先留一个入口。" }],
     workouts: [],
-    body: []
+    body: [],
+    checkins: [],
+    dailyPlans: []
   },
   crochet: {
-    projects: [{ id: id(), name: "春日杯垫", progress: "35%", material: "棉线", note: "边缘想换成湖蓝色。" }],
+    projects: [{
+      id: id(),
+      name: "春日杯垫",
+      progress: "35%",
+      material: "棉线",
+      start: today(),
+      expectedEnd: offsetDate(14),
+      end: "",
+      note: "边缘想换成湖蓝色。"
+    }],
+    sessions: [{ id: id(), projectId: "", projectName: "春日杯垫", date: today(), time: nowTime(), progress: "35%", note: "继续边缘。" }],
     patterns: [],
     inventory: []
-  }
+  },
+  calendar: { selectedDate: today() }
 };
+
+const checkinQuestions = [
+  { key: "sleepHours", title: "睡了多久？", options: [["8", "7.5小时以上"], ["6.5", "6-7.5小时"], ["5.8", "5.5-6小时"], ["5", "少于5.5小时"]] },
+  { key: "sleepQuality", title: "睡眠质量怎么样？", options: [["good", "睡得稳"], ["normal", "一般"], ["bad", "很差"]] },
+  { key: "energy", title: "今天精神状态？", options: [["high", "很清醒"], ["normal", "正常"], ["low", "明显疲劳"], ["crash", "很虚"]] },
+  { key: "stomach", title: "胃部状态？", options: [["ok", "正常"], ["mild", "有点不适"], ["bad", "明显不适"], ["pain", "胃疼明显"]] },
+  { key: "hypoglycemia", title: "有明显低血糖吗？", options: [["no", "没有"], ["yes", "有"]] },
+  { key: "chest", title: "有明显胸闷吗？", options: [["no", "没有"], ["yes", "有"]] },
+  { key: "blackout", title: "有黑视吗？", options: [["no", "没有"], ["yes", "有"]] },
+  { key: "cycle", title: "经期阶段？", options: [["none", "不在经期"], ["day1_3", "月经1-3天"], ["day4_7", "月经4-7天"], ["luteal", "黄体期"]] },
+  { key: "muscle", title: "肌肉恢复情况？", options: [["ready", "恢复很好"], ["normal", "正常酸胀"], ["sore", "明显酸痛"], ["heavy", "沉重无力"]] },
+  { key: "neck", title: "肩颈紧张程度？", options: [["low", "不紧"], ["mid", "有点紧"], ["high", "很紧"]] },
+  { key: "stress", title: "今日压力？", options: [["low", "低"], ["mid", "中"], ["high", "高"]] },
+  { key: "appetite", title: "今日食欲？", options: [["good", "正常"], ["low", "偏低"], ["bad", "吃不下"]] }
+];
 
 let data = loadData();
 let listPage = 0;
 let calendarCursor = new Date();
+let checkinDraft = { step: 0, answers: {} };
 
 window.addEventListener("hashchange", () => {
   listPage = 0;
@@ -63,25 +92,26 @@ const routes = {
     ["鸟种库", "list-birds", "常见鸟与个人记录"],
     ["观察日志", "list-birdlogs", "按时间回看"]
   ]),
-  fitness: () => modulePage("健身", "把身体的变化放进日程", fitnessStats(), [
-    ["系统总览", "fitness-system", "目标、骨架和原则"],
-    ["状态判断", "fitness-status", "每日等级与硬触发"],
-    ["周结构", "fitness-week", "固定主题，动态强度"],
-    ["饮食恢复", "fitness-fuel", "热量、胃差日和经期"],
-    ["拳击规则", "fitness-boxing", "技术、爆发与刹车"],
-    ["AI准则", "fitness-ai", "避免系统跑偏"],
-    ["训练计划", "fitness-plan", "安排动作和节奏"],
-    ["训练打卡", "workout", "记录完成情况"],
-    ["身体数据", "body", "体重围度状态"]
+  fitness: renderFitness,
+  "fitness-checkin": renderFitnessCheckin,
+  "fitness-result": renderFitnessResult,
+  workout: () => formPage("训练打卡", "fitness", "workouts", "fitness", [
+    ["date", "日期", "date", today()],
+    ["exercise", "动作", "text", "", "深蹲"],
+    ["sets", "组数", "number", "3"],
+    ["reps", "次数", "text", "", "12 / 45s"],
+    ["load", "重量/时长", "text", "", "20kg / 30min"]
   ]),
-  "fitness-system": renderFitnessSystem,
-  "fitness-status": renderFitnessStatus,
-  "fitness-week": renderFitnessWeek,
-  "fitness-fuel": renderFitnessFuel,
-  "fitness-boxing": renderFitnessBoxing,
-  "fitness-ai": renderFitnessAI,
+  body: () => formPage("身体数据", "fitness", "body", "fitness", [
+    ["date", "日期", "date", today()],
+    ["weight", "体重", "text", "", "kg"],
+    ["measurements", "围度", "text", "", "腰围/臀围"],
+    ["fat", "体脂", "text", "", "%"],
+    ["note", "状态", "textarea", "", "睡眠、疲劳、饮食"]
+  ]),
   crochet: () => modulePage("钩织", "让线、图解和作品慢慢成形", crochetStats(), [
     ["作品项目", "project", "记录一件作品"],
+    ["钩织打卡", "crochet-session", "今天有没有织"],
     ["图解收藏", "pattern", "保存想做的灵感"],
     ["材料库存", "inventory", "毛线颜色和数量"],
     ["作品列表", "list-projects", "查看进行中的作品"]
@@ -114,33 +144,20 @@ const routes = {
     ["common", "常见鸟", "text", "", "白鹭、翠鸟"],
     ["note", "备注", "textarea", "", "交通、注意事项"]
   ]),
-  "fitness-plan": () => formPage("训练计划", "fitness", "plans", "fitness", [
-    ["date", "日期", "date", today()],
-    ["title", "标题", "text", "", "上肢力量"],
-    ["status", "状态", "select", "计划中", "计划中|已完成|跳过"],
-    ["exercises", "动作", "textarea", "", "俯卧撑 3x10；划船 3x12"],
-    ["note", "备注", "text", "", "重点提醒"]
-  ]),
-  workout: () => formPage("训练打卡", "fitness", "workouts", "fitness", [
-    ["date", "日期", "date", today()],
-    ["exercise", "动作", "text", "", "深蹲"],
-    ["sets", "组数", "number", "3"],
-    ["reps", "次数", "text", "", "12 / 45s"],
-    ["load", "重量/时长", "text", "", "20kg / 30min"]
-  ]),
-  body: () => formPage("身体数据", "fitness", "body", "fitness", [
-    ["date", "日期", "date", today()],
-    ["weight", "体重", "text", "", "kg"],
-    ["measurements", "围度", "text", "", "腰围/臀围"],
-    ["fat", "体脂", "text", "", "%"],
-    ["note", "状态", "textarea", "", "睡眠、疲劳、饮食"]
-  ]),
   project: () => formPage("钩织作品", "crochet", "projects", "crochet", [
     ["name", "作品名", "text", "", "春日杯垫"],
     ["progress", "进度", "text", "", "35%"],
     ["material", "材料", "text", "", "棉线"],
-    ["hook", "针号", "text", "", "3.0mm"],
+    ["start", "开始", "date", today()],
+    ["expectedEnd", "预计结束", "date", offsetDate(14)],
+    ["end", "完成日", "date", ""],
     ["note", "备注", "textarea", "", "针法、图片引用、想法"]
+  ]),
+  "crochet-session": () => formPage("钩织打卡", "crochet", "sessions", "crochet", [
+    ["date", "日期", "date", today()],
+    ["projectName", "作品", "text", firstProjectName(), "毯子"],
+    ["progress", "进度", "text", "", "42% / 第12行"],
+    ["note", "备注", "textarea", "", "今天织了什么"]
   ]),
   pattern: () => formPage("图解收藏", "crochet", "patterns", "crochet", [
     ["title", "图解名", "text", "", "花片图解"],
@@ -158,9 +175,9 @@ const routes = {
   ]),
   "list-birdlogs": () => listPageView("观察日志", "birding", "logs", "birding", birdLogCard),
   "list-birds": () => listPageView("鸟种库", "birding", "birds", "birding", birdCard),
-  "list-workouts": () => listPageView("训练记录", "fitness", "workouts", "fitness", workoutCard),
   "list-projects": () => listPageView("作品列表", "crochet", "projects", "crochet", projectCard),
   calendar: renderCalendar,
+  "calendar-day": renderCalendarDay,
   settings: renderSettings
 };
 
@@ -169,8 +186,7 @@ saveData();
 
 function loadData() {
   let loaded = null;
-  const keys = [STORE_KEY, ...OLD_KEYS];
-  for (const key of keys) {
+  for (const key of [STORE_KEY, ...OLD_KEYS]) {
     const raw = localStorage.getItem(key);
     if (!raw) continue;
     try {
@@ -181,6 +197,10 @@ function loadData() {
     }
   }
   const merged = merge(clone(baseData), loaded || {});
+  merged.fitness.checkins ||= [];
+  merged.fitness.dailyPlans ||= [];
+  merged.crochet.sessions ||= [];
+  merged.calendar ||= { selectedDate: today() };
   seedCommonBirds(merged);
   return merged;
 }
@@ -198,8 +218,7 @@ function seedCommonBirds(target) {
 
 function render() {
   const route = location.hash.slice(1) || "home";
-  const view = routes[route] || renderHome;
-  app.innerHTML = view();
+  app.innerHTML = (routes[route] || renderHome)();
 }
 
 function renderHome() {
@@ -211,11 +230,87 @@ function renderHome() {
       </div>
       <div class="entry-grid">
         ${entry("观鸟", "看见、辨认、回到那片风景", "birding")}
-        ${entry("健身", "计划、完成、感受身体的回声", "fitness")}
+        ${entry("健身", "先判断状态，再决定今天怎么练", "fitness")}
         ${entry("钩织", "从一团线开始，留下进度和灵感", "crochet")}
       </div>
     </section>
   `, bottomNav(), true);
+}
+
+function renderFitness() {
+  const latest = latestFitnessPlan();
+  const theme = todayTheme();
+  return shell("home", "健身", "今天先判断，再训练", `
+    <section class="fitness-home">
+      <div class="today-card">
+        <span>今日主题</span>
+        <strong>${theme.label}</strong>
+        <p>${theme.short}</p>
+      </div>
+      <a class="primary-tile" href="#fitness-checkin" data-reset-checkin="1">
+        <strong>开始今日判断</strong>
+        <span>一题一答，生成今日计划</span>
+      </a>
+      <div class="result-mini">
+        <span>最近结果</span>
+        <strong>${latest ? `${latest.level}级` : "未判断"}</strong>
+        <p>${latest ? latest.summary : "完成问卷后会显示今日建议。"}</p>
+      </div>
+      <div class="mini-actions">
+        <a class="ghost" href="#workout">训练打卡</a>
+        <a class="ghost" href="#body">身体数据</a>
+      </div>
+    </section>
+  `, bottomNav());
+}
+
+function renderFitnessCheckin() {
+  const question = checkinQuestions[checkinDraft.step] || checkinQuestions[0];
+  const progress = checkinDraft.step + 1;
+  return shell("fitness", "状态问卷", `${progress} / ${checkinQuestions.length}`, `
+    <section class="question-screen">
+      <div class="question-card">
+        <span>问题 ${progress}</span>
+        <h2>${question.title}</h2>
+        <div class="answer-stack">
+          ${question.options.map(([value, label]) => `<button class="answer" data-answer="${question.key}" data-value="${value}">${label}</button>`).join("")}
+        </div>
+      </div>
+      <div class="pager">
+        <button class="ghost" data-checkin-back>上一题</button>
+        <a class="button" href="#fitness">退出</a>
+        <button class="ghost" data-checkin-reset>重来</button>
+      </div>
+    </section>
+  `, "");
+}
+
+function renderFitnessResult() {
+  const latest = latestFitnessPlan();
+  if (!latest) return renderFitness();
+  return shell("fitness", "今日计划", "按状态生成", `
+    <section class="result-screen">
+      <div class="grade-card level-${latest.level}">
+        <div>
+          <span>等级</span>
+          <strong>${latest.level}</strong>
+        </div>
+        <p>${latest.summary}</p>
+      </div>
+      <div class="plan-card">
+        <span>今日计划</span>
+        <h2>${latest.title}</h2>
+        <div class="plan-lines">
+          ${latest.lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("")}
+        </div>
+      </div>
+      <div class="pager">
+        <a class="ghost" href="#fitness-checkin" data-reset-checkin="1">重测</a>
+        <a class="button" href="#workout">记录</a>
+        <a class="ghost" href="#fitness">返回</a>
+      </div>
+    </section>
+  `, "");
 }
 
 function modulePage(title, sub, stats, actions) {
@@ -277,24 +372,26 @@ function renderCalendar() {
   const monthStart = new Date(year, month, 1);
   const firstDay = monthStart.getDay();
   const start = new Date(year, month, 1 - firstDay);
-  const items = calendarItems();
+  const timeline = calendarTimeline();
   const days = Array.from({ length: 42 }, (_, index) => {
     const date = new Date(start);
     date.setDate(start.getDate() + index);
     const key = toDateKey(date);
-    const dayItems = items.filter((item) => item.date === key);
     const classes = ["day"];
     if (date.getMonth() !== month) classes.push("muted");
     if (key === today()) classes.push("today");
+    const main = mainEventForDay(key, timeline.events);
+    const spans = timeline.spans.filter((span) => dateInRange(key, span.start, span.end));
     return `
-      <div class="${classes.join(" ")}">
-        <span>${date.getDate()}</span>
-        <span class="dots">${dayItems.slice(0, 3).map((item) => `<i class="dot ${item.kind}"></i>`).join("")}</span>
-      </div>
+      <button class="${classes.join(" ")}" data-calendar-day="${key}">
+        <span class="day-num">${date.getDate()}</span>
+        <span class="day-main">${main ? escapeHtml(main.label) : ""}</span>
+        <span class="span-stack">${spans.slice(0, 2).map((span) => spanBand(span, key)).join("")}</span>
+      </button>
     `;
   }).join("");
 
-  return shell("home", "日历", "把三种兴趣放进同一张月历", `
+  return shell("home", "日历", "兴趣进展时间线", `
     <section class="calendar">
       <div class="calendar-head">
         <button class="ghost" data-month="-1">上月</button>
@@ -305,6 +402,28 @@ function renderCalendar() {
       <div class="month-grid">${days}</div>
     </section>
   `, bottomNav());
+}
+
+function renderCalendarDay() {
+  const selected = data.calendar.selectedDate || today();
+  const timeline = calendarTimeline();
+  const events = timeline.events.filter((event) => event.date === selected).sort((a, b) => (b.time || "").localeCompare(a.time || ""));
+  const spans = timeline.spans.filter((span) => dateInRange(selected, span.start, span.end));
+  return shell("calendar", selected.slice(5), "当天详情", `
+    <section class="list">
+      <div class="hint">${events.length || spans.length ? "当天记录" : "这天还没有记录。"}</div>
+      <div class="list-stack">
+        ${events.map((event) => detailCard(event.label, event.detail, [event.type])).join("")}
+        ${spans.map((span) => detailCard(`钩织-${span.name}`, isCrochetActive(span, selected) ? "当天有钩织打卡" : "跨度内未打卡，日历用虚线", [span.start, span.end])).join("")}
+        ${!events.length && !spans.length ? `<div class="compact-note"><h2>空白的一天</h2><p>新增记录后会出现在这里。</p></div>` : ""}
+      </div>
+      <div class="pager">
+        <a class="ghost" href="#bird-log">观鸟</a>
+        <a class="button" href="#calendar">返回</a>
+        <a class="ghost" href="#crochet-session">钩织</a>
+      </div>
+    </section>
+  `, "");
 }
 
 function renderSettings() {
@@ -321,141 +440,6 @@ function renderSettings() {
       </div>
     </section>
   `, bottomNav());
-}
-
-function renderFitnessSystem() {
-  return shell("fitness", "力量系统", "固定增长轴 + 动态恢复", `
-    <section class="list">
-      <div class="hint">目标不是减脂或轻健身，而是宽松衣服下仍能看出训练痕迹。</div>
-      <div class="list-stack">
-        ${systemCard("最终体型", "女性力量型训练痕迹", ["三角肌明显", "背阔有结构", "上背立体", "腿部有力量感"])}
-        ${systemCard("固定增长轴", "长期主项不要频繁换", ["蹲类", "罗马尼亚硬拉", "保加利亚分腿蹲", "高位下拉/划船/侧平举/推举"])}
-        ${systemCard("动态恢复", "状态决定今天练多狠", ["强度", "容量", "拳击负荷", "饮食与恢复策略"])}
-      </div>
-      <div class="pager">
-        <a class="ghost" href="#fitness-status">状态</a>
-        <a class="button" href="#fitness">返回</a>
-        <a class="ghost" href="#fitness-week">周结构</a>
-      </div>
-    </section>
-  `, "");
-}
-
-function renderFitnessStatus() {
-  return shell("fitness", "状态判断", "状态决定刺激，不取消主线", `
-    <section class="list">
-      <div class="hint">每天先问睡眠、胃、低血糖、胸闷、黑视、经期、压力、食欲和肌肉恢复。</div>
-      <div class="list-stack">
-        ${systemCard("D级硬触发", "不允许讨价还价", ["明显胸闷/黑视/低血糖", "恶心或胃疼明显", "睡眠<5.5h且疲劳", "只允许八段锦/呼吸/拉伸/快走"])}
-        ${systemCard("C级明显疲劳", "保主题，取消高刺激", ["睡眠<6h", "胃明显不适", "经期虚弱", "主项改技术版/轻稳定"])}
-        ${systemCard("B级轻疲劳", "仍然属于训练日", ["保留主项", "重量-20%", "容量-20%-40%", "取消爆发拳击"])}
-      </div>
-      <div class="pager">
-        <a class="ghost" href="#fitness-system">系统</a>
-        <a class="button" href="#fitness">返回</a>
-        <a class="ghost" href="#fitness-rules">规则</a>
-      </div>
-    </section>
-  `, "");
-}
-
-routes["fitness-rules"] = function renderFitnessRules() {
-  return shell("fitness", "推进规则", "长期可恢复的高质量刺激", `
-    <section class="list">
-      <div class="hint">永远保留 1-2 次余力，不硬顶。</div>
-      <div class="list-stack">
-        ${systemCard("渐进超负荷", "满足条件再加", ["同重量轻松完成目标次数", "动作稳定", "恢复正常", "下次只加 2.5-5%"])}
-        ${systemCard("拳击系统", "按阶段增加强度", ["5-7月 步伐/空击/控制", "8-10月 沙袋/组合/核心旋转", "11月后 爆发组合/体能循环", "B级只做技术空击，C/D取消"])}
-        ${systemCard("饮食恢复", "增肌必须有盈余", ["阶段1 1900-2100 kcal", "阶段2 2100-2300 kcal", "阶段3 2300-2500 kcal", "每周+0.1-0.25kg；胃差日不腰斩热量"])}
-      </div>
-      <div class="pager">
-        <a class="ghost" href="#fitness-status">状态</a>
-        <a class="button" href="#fitness">返回</a>
-        <a class="ghost" href="#fitness-plan">计划</a>
-      </div>
-    </section>
-  `, "");
-};
-
-function renderFitnessWeek() {
-  return shell("fitness", "周结构", "主题固定，刺激动态", `
-    <section class="list">
-      <div class="hint">状态差不是取消一切，而是保留主题、降低刺激。</div>
-      <div class="list-stack">
-        ${systemCard("固定周主题", "长期不漂移", ["周一 下肢", "周二 上肢", "周三 恢复", "周四 下肢"])}
-        ${systemCard("后半周", "力量与专项并行", ["周五 上肢", "周六 拳击", "周日 恢复", "强度按状态调整"])}
-        ${systemCard("渐进超负荷", "满足条件再加", ["动作稳定", "恢复正常", "当前重量轻松完成", "下次只加2.5-5%"])}
-      </div>
-      <div class="pager">
-        <a class="ghost" href="#fitness-status">状态</a>
-        <a class="button" href="#fitness">返回</a>
-        <a class="ghost" href="#fitness-fuel">饮食</a>
-      </div>
-    </section>
-  `, "");
-}
-
-function renderFitnessFuel() {
-  return shell("fitness", "饮食恢复", "增肌与胃稳定同时照顾", `
-    <section class="list">
-      <div class="hint">饮食目标是长期恢复 + 增肌，不是减脂。</div>
-      <div class="list-stack">
-        ${systemCard("热量目标", "按阶段进入盈余", ["阶段1 1900-2100", "阶段2 2100-2300", "阶段3 2300-2500", "每周+0.1-0.25kg"])}
-        ${systemCard("训练前后", "不空腹训练", ["训练前 碳水+少量蛋白", "训练后 碳水+蛋白", "碳水稳定优先", "少食多餐"])}
-        ${systemCard("经期与胃差日", "恢复不等于热量腰斩", ["胃差日 粥/面/土豆泥/米糊/炖菜", "经期1-3天禁PR/爆发/力竭", "黄体期降强度/控盐/补镁", "卵泡期可提高强度"])}
-      </div>
-      <div class="pager">
-        <a class="ghost" href="#fitness-week">周结构</a>
-        <a class="button" href="#fitness">返回</a>
-        <a class="ghost" href="#fitness-boxing">拳击</a>
-      </div>
-    </section>
-  `, "");
-}
-
-function renderFitnessBoxing() {
-  return shell("fitness", "拳击规则", "不是减脂有氧，是专项技术", `
-    <section class="list">
-      <div class="hint">拳击用于身体控制、核心旋转、爆发能力和压迫感。</div>
-      <div class="list-stack">
-        ${systemCard("阶段推进", "从控制到爆发", ["前期 步伐/空击/控制", "中期 沙袋/组合拳/核心旋转", "后期 爆发组合/体能循环", "不把拳击当减脂有氧"])}
-        ${systemCard("状态刹车", "按恢复调整", ["S/A 可做爆发但留余力", "B级取消重拳和爆发组合", "B级保留技术空击/步伐", "C/D取消拳击"])}
-        ${systemCard("训练气质", "力量感来源之一", ["神经募集", "肩背控制", "核心旋转", "连续输出能力"])}
-      </div>
-      <div class="pager">
-        <a class="ghost" href="#fitness-fuel">饮食</a>
-        <a class="button" href="#fitness">返回</a>
-        <a class="ghost" href="#fitness-ai">AI</a>
-      </div>
-    </section>
-  `, "");
-}
-
-function renderFitnessAI() {
-  return shell("fitness", "AI准则", "防止过度恢复，也防止硬顶", `
-    <section class="list">
-      <div class="hint">AI的任务是长期稳定累积刺激，最终出现明显训练痕迹。</div>
-      <div class="list-stack">
-        ${systemCard("每日职责", "先判断再开练", ["判断训练等级", "调整刺激", "跟踪动作/重量/组次/RPE", "观察恢复与体重趋势"])}
-        ${systemCard("必须避免", "别让系统跑偏", ["长期低刺激", "动作漂移", "长期不加重量", "情绪化追PR"])}
-        ${systemCard("最终方向", "不是每天完美状态", ["防止过度恢复", "防止过度硬顶", "不把状态差当逃避", "宽松衣服下仍有训练痕迹"])}
-      </div>
-      <div class="pager">
-        <a class="ghost" href="#fitness-boxing">拳击</a>
-        <a class="button" href="#fitness">返回</a>
-        <a class="ghost" href="#fitness-plan">计划</a>
-      </div>
-    </section>
-  `, "");
-}
-
-function systemCard(title, sub, points) {
-  return `
-    <article class="list-card">
-      <header><div><h3>${title}</h3><p>${sub}</p></div></header>
-      <div class="pills">${points.slice(0, 4).map((point) => `<span class="pill">${escapeHtml(point)}</span>`).join("")}</div>
-    </article>
-  `;
 }
 
 function shell(back, title, sub, content, nav, isHome = false) {
@@ -509,6 +493,7 @@ function onSubmit(event) {
   event.preventDefault();
   const item = Object.fromEntries(new FormData(form).entries());
   item.id = id();
+  item.time = nowTime();
   data[form.dataset.group][form.dataset.list].unshift(item);
   if (form.dataset.after === "bird-log") afterBirdLog(item);
   saveData();
@@ -516,6 +501,43 @@ function onSubmit(event) {
 }
 
 function onClick(event) {
+  const reset = event.target.closest("[data-reset-checkin]");
+  if (reset) {
+    checkinDraft = { step: 0, answers: {} };
+  }
+
+  const answer = event.target.closest("[data-answer]");
+  if (answer) {
+    checkinDraft.answers[answer.dataset.answer] = answer.dataset.value;
+    if (checkinDraft.step < checkinQuestions.length - 1) {
+      checkinDraft.step += 1;
+      render();
+    } else {
+      finishCheckin();
+    }
+    return;
+  }
+
+  if (event.target.closest("[data-checkin-back]")) {
+    checkinDraft.step = Math.max(0, checkinDraft.step - 1);
+    render();
+    return;
+  }
+
+  if (event.target.closest("[data-checkin-reset]")) {
+    checkinDraft = { step: 0, answers: {} };
+    render();
+    return;
+  }
+
+  const day = event.target.closest("[data-calendar-day]");
+  if (day) {
+    data.calendar.selectedDate = day.dataset.calendarDay;
+    saveData();
+    location.hash = "calendar-day";
+    return;
+  }
+
   const deleteButton = event.target.closest("[data-delete]");
   if (deleteButton) {
     removeItem(deleteButton.dataset.delete, deleteButton.dataset.id);
@@ -565,6 +587,84 @@ function onInput(event) {
   reader.readAsText(input.files[0]);
 }
 
+function finishCheckin() {
+  const result = evaluateCheckin(checkinDraft.answers);
+  const theme = todayTheme();
+  const plan = makeDailyPlan(result.level, theme);
+  const checkin = {
+    id: id(),
+    date: today(),
+    time: nowTime(),
+    theme: theme.label,
+    level: result.level,
+    summary: result.summary,
+    answers: { ...checkinDraft.answers }
+  };
+  data.fitness.checkins.unshift(checkin);
+  data.fitness.dailyPlans.unshift({
+    id: id(),
+    date: today(),
+    time: nowTime(),
+    theme: theme.label,
+    level: result.level,
+    title: plan.title,
+    summary: result.summary,
+    lines: plan.lines
+  });
+  saveData();
+  location.hash = "fitness-result";
+}
+
+function evaluateCheckin(answers) {
+  const dTrigger = answers.chest === "yes" || answers.blackout === "yes" || answers.hypoglycemia === "yes" || answers.stomach === "pain" || (Number(answers.sleepHours) < 5.5 && ["low", "crash"].includes(answers.energy));
+  if (dTrigger) return { level: "D", summary: "恢复崩溃，只做恢复。" };
+
+  const cTrigger = Number(answers.sleepHours) < 6 || answers.stomach === "bad" || answers.energy === "crash" || answers.cycle === "day1_3" || answers.muscle === "heavy";
+  if (cTrigger) return { level: "C", summary: "明显疲劳，保主题但取消高刺激。" };
+
+  const bSignals = [answers.sleepQuality === "bad", answers.energy === "low", answers.stomach === "mild", answers.cycle === "luteal", answers.muscle === "sore", answers.neck === "high", answers.stress === "high", answers.appetite === "bad"].filter(Boolean).length;
+  if (bSignals >= 2) return { level: "B", summary: "轻疲劳，保主项并降低刺激。" };
+
+  const sSignals = [Number(answers.sleepHours) >= 7.5, answers.sleepQuality === "good", answers.energy === "high", answers.muscle === "ready", answers.stress === "low", answers.appetite === "good"].filter(Boolean).length;
+  if (sSignals >= 5) return { level: "S", summary: "恢复很好，可以稳定推进。" };
+
+  return { level: "A", summary: "状态稳定，正常训练。" };
+}
+
+function makeDailyPlan(level, theme) {
+  if (level === "D") {
+    return { title: "恢复日", lines: ["八段锦 / 呼吸 / 拉伸 / 快走任选。", "禁止力量、HIIT、爆发拳击。", "吃容易消化的碳水和蛋白，不要热量腰斩。"] };
+  }
+  if (level === "C") {
+    return { title: `${theme.label} · 技术版`, lines: [`保留${theme.label}主题。`, "取消高刺激，动作做轻量稳定版。", theme.cPlan, "不追重量，不做爆发。"] };
+  }
+  if (level === "B") {
+    return { title: `${theme.label} · 降刺激`, lines: [`保留${theme.label}主项。`, "重量 -20%，容量 -20%-40%。", "不追PR，拳击取消重拳和高速组合。", theme.bPlan] };
+  }
+  if (level === "S") {
+    return { title: `${theme.label} · 可推进`, lines: [theme.aPlan, "动作稳定可小幅推进。", "永远保留1-2次余力。"] };
+  }
+  return { title: `${theme.label} · 正常训练`, lines: [theme.aPlan, "稳定完成即可。", "不硬顶，不力竭成瘾。"] };
+}
+
+function todayTheme(date = new Date()) {
+  const day = date.getDay();
+  const themes = {
+    1: { label: "下肢", short: "蹲类 / 髋主导 / 单侧稳定", aPlan: "蹲类、罗马尼亚硬拉、保加利亚分腿蹲、核心稳定。", bPlan: "蹲类和RDL降重，单侧动作少做1-2组。", cPlan: "呼吸深蹲、臀桥、轻核心、稳定训练。" },
+    2: { label: "上肢", short: "背阔 / 上背 / 肩 / 推", aPlan: "高位下拉、划船、侧平举、哑铃推举。", bPlan: "背部和肩部保留，侧平举减组。", cPlan: "轻划船、弹力带下拉、肩胛控制。" },
+    3: { label: "恢复", short: "呼吸 / 拉伸 / 快走", aPlan: "八段锦、呼吸、拉伸或快走。", bPlan: "快走减量，拉伸放慢。", cPlan: "呼吸和轻拉伸。" },
+    4: { label: "下肢", short: "蹲类 / 髋主导 / 单侧稳定", aPlan: "蹲类、罗马尼亚硬拉、保加利亚分腿蹲、核心稳定。", bPlan: "蹲类和RDL降重，单侧动作少做1-2组。", cPlan: "呼吸深蹲、臀桥、轻核心、稳定训练。" },
+    5: { label: "上肢", short: "背阔 / 上背 / 肩 / 推", aPlan: "高位下拉、划船、侧平举、哑铃推举。", bPlan: "背部和肩部保留，侧平举减组。", cPlan: "轻划船、弹力带下拉、肩胛控制。" },
+    6: { label: "拳击", short: "步伐 / 空击 / 组合", aPlan: "步伐、空击、组合拳或沙袋。", bPlan: "只做技术空击和步伐。", cPlan: "取消拳击或只做轻步伐。" },
+    0: { label: "恢复", short: "呼吸 / 拉伸 / 快走", aPlan: "八段锦、呼吸、拉伸或快走。", bPlan: "快走减量，拉伸放慢。", cPlan: "呼吸和轻拉伸。" }
+  };
+  return themes[day];
+}
+
+function latestFitnessPlan() {
+  return data.fitness.dailyPlans?.[0] || null;
+}
+
 function afterBirdLog(item) {
   if (item.species && !data.birding.birds.some((bird) => bird.name === item.species)) {
     data.birding.birds.unshift({ id: id(), name: item.species, scientific: "", note: "由观察记录创建。" });
@@ -591,7 +691,11 @@ function workoutCard(item, path) {
 }
 
 function projectCard(item, path) {
-  return card(item, path, item.name || "钩织作品", item.progress || "", [item.material, item.hook], item.note);
+  return card(item, path, item.name || "钩织作品", item.progress || "", [item.material, item.start, item.expectedEnd || item.end], item.note);
+}
+
+function detailCard(title, sub, pills) {
+  return `<article class="list-card"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(sub || "")}</p><div class="pills">${pills.filter(Boolean).map((pill) => `<span class="pill">${escapeHtml(pill)}</span>`).join("")}</div></article>`;
 }
 
 function card(item, path, title, sub, pills, body, allowHtml = false) {
@@ -612,20 +716,50 @@ function birdStats() {
 }
 
 function fitnessStats() {
-  return [[data.fitness.plans.length, "计划"], [data.fitness.workouts.length, "打卡"], [data.fitness.body.length, "身体"]];
+  return [[data.fitness.dailyPlans?.length || 0, "判断"], [data.fitness.workouts.length, "打卡"], [data.fitness.body.length, "身体"]];
 }
 
 function crochetStats() {
-  return [[data.crochet.projects.length, "作品"], [data.crochet.patterns.length, "图解"], [data.crochet.inventory.length, "材料"]];
+  return [[data.crochet.projects.length, "作品"], [data.crochet.sessions?.length || 0, "打卡"], [data.crochet.inventory.length, "材料"]];
 }
 
-function calendarItems() {
-  return [
-    ...data.birding.logs.map((x) => ({ date: x.date, title: x.species, type: "观鸟", kind: "birding" })),
-    ...data.fitness.plans.map((x) => ({ date: x.date, title: x.title, type: "计划", kind: "fitness" })),
-    ...data.fitness.workouts.map((x) => ({ date: x.date, title: x.exercise, type: "训练", kind: "fitness" })),
-    ...data.crochet.projects.map((x) => ({ date: x.start || today(), title: x.name, type: "钩织", kind: "crochet" }))
+function calendarTimeline() {
+  const events = [
+    ...data.birding.logs.map((x) => ({ date: x.date, time: x.time || "08:00", label: `观鸟-${x.species || "记录"}`, detail: x.location || x.note || "", type: "观鸟", kind: "birding" })),
+    ...data.fitness.dailyPlans.map((x) => ({ date: x.date, time: x.time || "09:00", label: `健身-${x.theme}`, detail: `${x.level}级 ${x.title}`, type: "健身", kind: "fitness" })),
+    ...data.fitness.workouts.map((x) => ({ date: x.date, time: x.time || "20:00", label: `健身-${x.exercise || "打卡"}`, detail: x.load || x.note || "", type: "健身", kind: "fitness" })),
+    ...data.crochet.sessions.map((x) => ({ date: x.date, time: x.time || "21:00", label: `钩织-${x.projectName || "打卡"}`, detail: x.progress || x.note || "", type: "钩织", kind: "crochet" }))
   ].filter((x) => x.date);
+
+  const spans = data.crochet.projects
+    .filter((project) => project.start && (project.end || project.expectedEnd))
+    .map((project) => ({
+      id: project.id,
+      name: project.name,
+      start: project.start,
+      end: project.end || project.expectedEnd,
+      sessions: data.crochet.sessions.filter((session) => (session.projectName || "") === project.name).map((session) => session.date)
+    }));
+
+  return { events, spans };
+}
+
+function mainEventForDay(date, events) {
+  return events.filter((event) => event.date === date).sort((a, b) => (b.time || "").localeCompare(a.time || ""))[0];
+}
+
+function spanBand(span, date) {
+  const active = isCrochetActive(span, date);
+  const label = date === span.start ? `钩织-${span.name}` : "";
+  return `<i class="span-band ${active ? "" : "dashed"}">${escapeHtml(label)}</i>`;
+}
+
+function isCrochetActive(span, date) {
+  return span.sessions.includes(date) || date === span.start;
+}
+
+function dateInRange(date, start, end) {
+  return date >= start && date <= end;
 }
 
 function removeItem(path, itemId) {
@@ -651,8 +785,13 @@ function merge(base, extra) {
     ...extra,
     birding: { ...base.birding, ...(extra.birding || {}) },
     fitness: { ...base.fitness, ...(extra.fitness || {}) },
-    crochet: { ...base.crochet, ...(extra.crochet || {}) }
+    crochet: { ...base.crochet, ...(extra.crochet || {}) },
+    calendar: { ...base.calendar, ...(extra.calendar || {}) }
   };
+}
+
+function firstProjectName() {
+  return data.crochet.projects[0]?.name || "";
 }
 
 function clone(value) {
@@ -665,6 +804,16 @@ function id() {
 
 function today() {
   return toDateKey(new Date());
+}
+
+function offsetDate(days) {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return toDateKey(date);
+}
+
+function nowTime() {
+  return new Date().toTimeString().slice(0, 5);
 }
 
 function toDateKey(date) {

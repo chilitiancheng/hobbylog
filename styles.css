@@ -432,6 +432,175 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(96, 119, 90, .12);
 }
 
+.fitness-home,
+.question-screen,
+.result-screen {
+  display: grid;
+  gap: 10px;
+  height: 100%;
+  min-height: 0;
+}
+
+.fitness-home {
+  grid-template-rows: auto 1fr auto auto;
+}
+
+.today-card,
+.primary-tile,
+.result-mini,
+.question-card,
+.grade-card,
+.plan-card {
+  background: rgba(255, 250, 240, .86);
+  border: 1px solid rgba(224, 210, 184, .92);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+}
+
+.today-card,
+.result-mini {
+  padding: 14px;
+}
+
+.today-card span,
+.result-mini span,
+.question-card span,
+.grade-card span,
+.plan-card span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.today-card strong,
+.result-mini strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 24px;
+}
+
+.today-card p,
+.result-mini p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.primary-tile {
+  display: grid;
+  align-content: center;
+  min-height: 0;
+  padding: 20px;
+  color: #fff;
+  background: var(--leaf);
+  border-color: var(--leaf);
+}
+
+.primary-tile strong {
+  font-size: 24px;
+}
+
+.primary-tile span {
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.mini-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.question-screen,
+.result-screen {
+  grid-template-rows: 1fr auto;
+}
+
+.question-card {
+  display: grid;
+  align-content: center;
+  gap: 18px;
+  min-height: 0;
+  padding: 18px;
+}
+
+.question-card h2 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+.answer-stack {
+  display: grid;
+  gap: 9px;
+}
+
+.answer {
+  min-height: 46px;
+  padding: 10px 12px;
+  color: var(--ink);
+  background: rgba(255, 252, 246, .9);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.grade-card {
+  display: grid;
+  grid-template-columns: 86px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+}
+
+.grade-card strong {
+  display: block;
+  font-size: 42px;
+  line-height: 1;
+}
+
+.grade-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.level-S { border-color: #7f9c73; }
+.level-A { border-color: #8aa47d; }
+.level-B { border-color: #d4af68; }
+.level-C { border-color: #c98f70; }
+.level-D { border-color: #b96e62; }
+
+.plan-card {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 0;
+  padding: 16px;
+}
+
+.plan-card h2 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.18;
+}
+
+.plan-lines {
+  display: grid;
+  gap: 7px;
+}
+
+.plan-lines p {
+  margin: 0;
+  padding: 8px 10px;
+  background: rgba(96, 119, 90, .10);
+  border-radius: 12px;
+  color: var(--ink);
+  font-size: 13px;
+}
+
 .compact-note {
   display: grid;
   align-content: center;
@@ -485,14 +654,18 @@ textarea:focus {
 
 .day {
   display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-items: start;
+  gap: 2px;
   min-height: 0;
-  place-items: center;
   position: relative;
+  padding: 5px 4px;
   border: 1px solid rgba(224, 210, 184, .65);
   border-radius: 12px;
   background: rgba(255, 252, 246, .58);
   color: var(--ink);
   font-size: 12px;
+  cursor: pointer;
 }
 
 .day.muted {
@@ -506,22 +679,48 @@ textarea:focus {
   font-weight: 900;
 }
 
-.dots {
-  display: flex;
+.day-num {
+  font-weight: 800;
+}
+
+.day-main {
+  display: block;
+  overflow: hidden;
+  max-width: 100%;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.span-stack {
+  display: grid;
   gap: 2px;
-  position: absolute;
-  bottom: 5px;
+  width: 100%;
+  min-height: 12px;
 }
 
-.dot {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--leaf);
+.span-band {
+  display: block;
+  overflow: hidden;
+  height: 8px;
+  width: 100%;
+  padding-left: 2px;
+  border-radius: 999px;
+  background: rgba(96, 119, 90, .45);
+  color: var(--leaf-dark);
+  font-size: 7px;
+  font-style: normal;
+  line-height: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.dot.fitness { background: var(--clay); }
-.dot.crochet { background: var(--blue); }
+.span-band.dashed {
+  background: repeating-linear-gradient(90deg, rgba(96, 119, 90, .38) 0 5px, transparent 5px 8px);
+  border: 1px dashed rgba(96, 119, 90, .55);
+}
 
 .hidden-input {
   display: none;
