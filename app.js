@@ -226,19 +226,68 @@ function render() {
 }
 
 function renderHome() {
-  return shell("", "兴趣记", "观鸟 · 健身 · 钩织", `
+  const fitness = homeFitnessSummary();
+  const crochet = homeCrochetSummary();
+  const birding = homeBirdingSummary();
+  return shell("", "兴趣记", "Today", `
     <section class="home-hero">
       <div class="home-copy">
-        <h2>把日子里的热爱，轻轻收好。</h2>
-        <p>记下鸟的来处、身体的节奏，也安放一针一线慢慢长出的作品。</p>
+        <p class="home-kicker"><em>Keep what made today feel alive.</em></p>
       </div>
-      <div class="entry-grid">
-        ${entry("观鸟", "看见、辨认、回到那片风景", "birding")}
-        ${entry("健身", "先判断状态，再决定今天怎么练", "fitness")}
-        ${entry("钩织", "从一团线开始，留下进度和灵感", "crochet")}
+      <div class="today-summary" aria-label="Today summary">
+        <a class="summary-row" href="#fitness">
+          <span class="summary-label">健身</span>
+          <span class="summary-main">${fitness.main}</span>
+          <span class="summary-meta">${fitness.meta}</span>
+        </a>
+        <a class="summary-row" href="#crochet">
+          <span class="summary-label">钩织</span>
+          <span class="summary-main">${crochet.main}</span>
+          <span class="summary-meta">${crochet.meta}</span>
+        </a>
+        <a class="summary-row has-thumb" href="#birding">
+          ${birding.thumb}
+          <span class="summary-label">观鸟</span>
+          <span class="summary-main">${birding.main}</span>
+          <span class="summary-meta">${birding.meta}</span>
+        </a>
       </div>
     </section>
   `, bottomNav(), true);
+}
+
+function homeFitnessSummary() {
+  const plan = fitnessPlanByDate(today());
+  if (!plan) return { main: "未安排", meta: "Today" };
+  const progress = fitnessPlanProgress(plan);
+  return {
+    main: progress.total ? `${progress.done}/${progress.total}` : "未安排",
+    meta: escapeHtml(plan.title || plan.theme || plan.summary || "Plan")
+  };
+}
+
+function homeCrochetSummary() {
+  const project = currentCrochetProject();
+  if (!project) return { main: "未选作品", meta: "0%" };
+  const session = latestCrochetSession(project.name);
+  return {
+    main: escapeHtml(project.name),
+    meta: escapeHtml(session?.progress || project.progress || "未记录")
+  };
+}
+
+function homeBirdingSummary() {
+  const latest = data.birding.logs[0];
+  const photo = birdPhotos()[0];
+  if (!latest) {
+    return { main: "未记录", meta: "Today", thumb: "" };
+  }
+  const thumb = photo ? `<span class="summary-thumb"><img src="${escapeHtml(photo.src)}" alt=""></span>` : "";
+  return {
+    main: escapeHtml(latest.species || "未命名"),
+    meta: escapeHtml(latest.location || latest.date || "观察记录"),
+    thumb
+  };
 }
 
 function renderFitness() {
