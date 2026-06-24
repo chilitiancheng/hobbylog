@@ -277,6 +277,10 @@ a {
   min-height: 0;
 }
 
+.list.action-list {
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
 .list-stack {
   display: grid;
   align-content: start;
@@ -327,6 +331,12 @@ a {
   gap: 8px;
 }
 
+.page-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  align-items: stretch;
+}
+
 .bottom-nav {
   grid-template-columns: repeat(5, 1fr);
 }
@@ -343,6 +353,17 @@ a {
   border-radius: 14px;
   cursor: pointer;
   text-align: center;
+}
+
+.page-actions .button,
+.page-actions .ghost,
+.form-actions .button,
+.form-actions .ghost {
+  min-height: 42px;
+  padding: 8px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.15;
 }
 
 .nav-item,
@@ -615,7 +636,7 @@ textarea:focus {
 }
 
 .detail-actions {
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .project-detail-card h3 {

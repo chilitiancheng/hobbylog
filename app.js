@@ -351,11 +351,11 @@ function renderBirding() {
 function renderBirdPending() {
   const items = data.birding.pendingPhotos.slice(0, 3);
   return shell("birding", "待确认", `${data.birding.pendingPhotos.length} 条`, `
-    <section class="list">
+    <section class="list action-list">
       <div class="list-stack">
         ${items.length ? items.map(pendingBirdCard).join("") : `<div class="compact-note"><h2>没有待确认</h2><p>下次看见拿不准的鸟，就先放这里。</p></div>`}
       </div>
-      <div class="pager">
+      <div class="pager page-actions">
         <a class="ghost" href="#bird-pending-new">新增</a>
         <a class="button" href="#birding">返回</a>
         <a class="ghost" href="#bird-log">记录</a>
@@ -423,7 +423,7 @@ function renderCrochetDetail() {
   if (!project) return renderCrochet();
   const sessions = data.crochet.sessions.filter((session) => session.projectName === project.name).slice(0, 3);
   return shell("crochet", project.name, "作品详情", `
-    <section class="list">
+    <section class="list action-list">
       <div class="list-stack">
         <article class="list-card project-detail-card">
           <h3>${escapeHtml(project.progress || project.status || "进行中")}</h3>
@@ -436,9 +436,10 @@ function renderCrochetDetail() {
         ${project.next ? detailCard("下一步", project.next, ["继续这里"]) : ""}
         ${sessions.length ? sessions.map((session) => detailCard(`打卡-${session.date}`, session.progress || session.note, ["钩织"])).join("") : detailCard("暂无打卡", "从今日钩织打卡开始记录。", ["空"])}
       </div>
-      <div class="mini-actions detail-actions">
+      <div class="mini-actions detail-actions page-actions">
         <a class="ghost" href="#project">编辑</a>
         <a class="button" href="#crochet-session">打卡</a>
+        <a class="ghost" href="#crochet">返回</a>
       </div>
     </section>
   `, "");
