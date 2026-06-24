@@ -109,6 +109,8 @@ const routes = {
     ["location", "地点", "text", "", "河边湿地"],
     ["count", "数量", "number", "1"],
     ["certainty", "确认", "select", "确定", "确定|待确认"],
+    ["photoData", "图片上传", "image"],
+    ["photo", "图片链接/文件名", "text", "", "链接或文件名"],
     ["note", "备注", "textarea", "", "行为、天气、识别依据"]
   ], afterBirdLog),
   "bird-plan": () => formPage("观鸟计划", "birding", "plans", "birding", [
@@ -124,7 +126,8 @@ const routes = {
     ["candidate", "候选鸟种", "text", "", "柳莺属？"],
     ["location", "地点", "text", "", "河边湿地"],
     ["count", "数量", "number", "1"],
-    ["photo", "照片引用", "text", "", "链接或文件名"],
+    ["photoData", "图片上传", "image"],
+    ["photo", "图片链接/文件名", "text", "", "链接或文件名"],
     ["reason", "判断依据", "text", "", "翼斑、嘴型"],
     ["note", "不确定点", "textarea", "", "还需要确认什么"]
   ]),
@@ -171,6 +174,8 @@ const routes = {
   "list-birdlogs": () => listPageView("观察日志", "birding", "logs", "birding", birdLogCard),
   "list-birds": () => listPageView("鸟种库", "birding", "birds", "birding", birdCard),
   "bird-life": renderBirdLife,
+  "bird-album": renderBirdAlbum,
+  "bird-photo": renderBirdPhoto,
   "list-projects": () => listPageView("作品列表", "crochet", "projects", "crochet", projectCard),
   "crochet-detail": renderCrochetDetail,
   calendar: renderCalendar,
@@ -343,6 +348,7 @@ function renderBirding() {
       <div class="mini-actions">
         <a class="ghost" href="#bird-plan">计划</a>
         <a class="ghost" href="#bird-location">地点</a>
+        <a class="ghost" href="#bird-album">相册</a>
       </div>
     </section>
   `, bottomNav());
@@ -376,6 +382,52 @@ function renderBirdLife() {
         <a class="ghost" href="#bird-log">新增</a>
         <a class="button" href="#birding">返回</a>
         <a class="ghost" href="#list-birds">常见鸟</a>
+      </div>
+    </section>
+  `, "");
+}
+
+function renderBirdAlbum() {
+  const photos = birdPhotos();
+  const visible = photos.slice(0, 4);
+  return shell("birding", "观鸟相册", `${photos.length} 张`, `
+    <section class="list action-list">
+      <div class="album-grid">
+        ${visible.length ? visible.map(photoTile).join("") : `<div class="compact-note"><h2>还没有照片</h2><p>在快速记录或待确认里添加第一张。</p></div>`}
+      </div>
+      <div class="pager page-actions">
+        <a class="ghost" href="#bird-log">记录</a>
+        <a class="button" href="#birding">返回</a>
+        <a class="ghost" href="#bird-pending-new">待确认</a>
+      </div>
+    </section>
+  `, "");
+}
+
+function renderBirdPhoto() {
+  const selected = data.birding.selectedPhoto || {};
+  const photo = birdPhotos().find((item) => item.source === selected.source && item.id === selected.id) || birdPhotos()[0];
+  if (!photo) {
+    return shell("bird-album", "照片", "未找到照片", `
+      <section class="list action-list">
+        <div class="compact-note"><h2>照片已不存在</h2><p>回到相册重新选择。</p></div>
+        <div class="pager page-actions"><a class="button" href="#bird-album">返回</a></div>
+      </section>
+    `, "");
+  }
+  return shell("bird-album", photo.title, photo.date || "照片详情", `
+    <section class="photo-detail">
+      <div class="photo-stage">${photoImage(photo, "")}</div>
+      <article class="list-card photo-info">
+        <h3>${escapeHtml(photo.title)}</h3>
+        <p>${escapeHtml([photo.date, photo.location, photo.status].filter(Boolean).join(" · "))}</p>
+        <div class="pills">${[photo.source === "pending" ? "待确认" : "观察", photo.ref].filter(Boolean).map((pill) => `<span class="pill">${escapeHtml(pill)}</span>`).join("")}</div>
+        ${photo.note ? `<p>${escapeHtml(photo.note)}</p>` : ""}
+      </article>
+      <div class="pager page-actions">
+        ${photo.source === "pending" ? `<button class="ghost" data-confirm-bird="${photo.id}">确认</button>` : `<a class="ghost" href="#bird-log">记录</a>`}
+        <a class="button" href="#bird-album">相册</a>
+        <a class="ghost" href="#birding">返回</a>
       </div>
     </section>
   `, "");
@@ -636,6 +688,20 @@ function entry(title, desc, route) {
 }
 
 function field([name, label, type, value = "", placeholder = ""]) {
+  if (type === "image") {
+    return `
+      <div class="field full photo-field">
+        <label>${label}</label>
+        <input type="hidden" name="${name}" value="${value || ""}" data-photo-data>
+        <label class="photo-upload">
+          <input type="file" accept="image/*" data-photo-upload>
+          <span>选择图片</span>
+          <small>自动压缩后保存</small>
+        </label>
+        <div class="photo-preview">${value ? `<img src="${escapeHtml(value)}" alt="">` : ""}</div>
+      </div>
+    `;
+  }
   if (type === "textarea") {
     return `<div class="field full"><label>${label}</label><textarea name="${name}" placeholder="${placeholder}">${value}</textarea></div>`;
   }
@@ -725,6 +791,17 @@ function onClick(event) {
     return;
   }
 
+  const photoButton = event.target.closest("[data-bird-photo]");
+  if (photoButton) {
+    data.birding.selectedPhoto = {
+      source: photoButton.dataset.photoSource,
+      id: photoButton.dataset.birdPhoto
+    };
+    saveData();
+    location.hash = "bird-photo";
+    return;
+  }
+
   const deleteButton = event.target.closest("[data-delete]");
   if (deleteButton) {
     removeItem(deleteButton.dataset.delete, deleteButton.dataset.id);
@@ -766,6 +843,12 @@ function onClick(event) {
 }
 
 function onInput(event) {
+  const photoInput = event.target.closest("[data-photo-upload]");
+  if (photoInput) {
+    handlePhotoUpload(photoInput);
+    return;
+  }
+
   const input = event.target.closest("[data-import]");
   if (!input || !input.files[0]) return;
   const reader = new FileReader();
@@ -780,6 +863,47 @@ function onInput(event) {
     }
   };
   reader.readAsText(input.files[0]);
+}
+
+function handlePhotoUpload(input) {
+  const file = input.files?.[0];
+  const field = input.closest(".photo-field");
+  const hidden = field?.querySelector("[data-photo-data]");
+  const preview = field?.querySelector(".photo-preview");
+  if (!file || !hidden) return;
+  compressImage(file)
+    .then((dataUrl) => {
+      hidden.value = dataUrl;
+      if (preview) preview.innerHTML = `<img src="${dataUrl}" alt="">`;
+    })
+    .catch(() => {
+      hidden.value = "";
+      if (preview) preview.innerHTML = `<small>图片处理失败，请改填链接/文件名。</small>`;
+    });
+}
+
+function compressImage(file, maxSize = 900, quality = 0.72) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = reject;
+      image.onload = () => {
+        const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+        const width = Math.max(1, Math.round(image.width * scale));
+        const height = Math.max(1, Math.round(image.height * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(image, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function finishCheckin() {
@@ -881,6 +1005,8 @@ function confirmPendingBird(itemId) {
     location: pending.location || "",
     count: pending.count || "1",
     certainty: "确定",
+    photo: pending.photo || "",
+    photoData: pending.photoData || "",
     note: [pending.reason, pending.note, pending.photo && `照片：${pending.photo}`].filter(Boolean).join("；")
   };
   data.birding.logs.unshift(log);
@@ -892,7 +1018,7 @@ function seenBirds() {
   const grouped = new Map();
   data.birding.logs.forEach((log) => {
     const name = log.species || "未命名鸟种";
-    const current = grouped.get(name) || { name, count: 0, first: log.date, latest: log.date, location: log.location || "", pending: 0 };
+    const current = grouped.get(name) || { name, count: 0, first: log.date, latest: log.date, location: log.location || "", pending: 0, photo: null };
     current.count += 1;
     if (log.certainty === "待确认") current.pending += 1;
     if (log.date && (!current.first || log.date < current.first)) current.first = log.date;
@@ -900,14 +1026,77 @@ function seenBirds() {
       current.latest = log.date;
       current.location = log.location || current.location;
     }
+    if (photoSrc(log) && (!current.photo || (log.date || "") >= (current.photo.date || ""))) {
+      current.photo = birdPhotoFromLog(log);
+    }
     grouped.set(name, current);
   });
   return [...grouped.values()].sort((a, b) => (b.latest || "").localeCompare(a.latest || ""));
 }
 
+function birdPhotos() {
+  return [
+    ...data.birding.logs.map(birdPhotoFromLog),
+    ...data.birding.pendingPhotos.map(birdPhotoFromPending)
+  ].filter((item) => item.src).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+}
+
+function birdPhotoFromLog(log) {
+  return {
+    source: "log",
+    id: log.id,
+    src: photoSrc(log),
+    ref: log.photo || "",
+    title: log.species || "未命名鸟种",
+    date: log.date || "",
+    location: log.location || "",
+    status: log.certainty || "观察",
+    note: log.note || ""
+  };
+}
+
+function birdPhotoFromPending(item) {
+  return {
+    source: "pending",
+    id: item.id,
+    src: photoSrc(item),
+    ref: item.photo || "",
+    title: item.candidate || "待确认鸟种",
+    date: item.date || "",
+    location: item.location || "",
+    status: "待确认",
+    note: item.note || item.reason || ""
+  };
+}
+
+function photoSrc(item) {
+  return item.photoData || urlLikePhoto(item.photo) || "";
+}
+
+function urlLikePhoto(value) {
+  const text = String(value || "").trim();
+  return /^(https?:|data:image|blob:|\.\/|\/|images\/|assets\/)/i.test(text) ? text : "";
+}
+
+function photoImage(photo, className = "photo-thumb") {
+  return `<img class="${className}" src="${escapeHtml(photo.src)}" alt="${escapeHtml(photo.title || "观鸟照片")}">`;
+}
+
+function photoTile(photo) {
+  return `
+    <button class="album-tile" type="button" data-bird-photo="${photo.id}" data-photo-source="${photo.source}">
+      ${photoImage(photo, "")}
+      <span>${escapeHtml(photo.title)}</span>
+      <small>${escapeHtml(photo.date || photo.status)}</small>
+    </button>
+  `;
+}
+
 function pendingBirdCard(item) {
+  const photo = birdPhotoFromPending(item);
   return `
     <article class="list-card pending-card">
+      ${photo.src ? `<button class="card-photo" type="button" data-bird-photo="${item.id}" data-photo-source="pending">${photoImage(photo, "")}</button>` : ""}
       <header>
         <div><h3>${escapeHtml(item.candidate || "未知鸟")}</h3><p>${escapeHtml(item.date || "")}</p></div>
         <button class="ghost" data-delete="birding.pendingPhotos" data-id="${item.id}">删</button>
@@ -923,6 +1112,7 @@ function lifeBirdCard(item) {
   return `
     <article class="list-card life-card">
       <header>
+        ${item.photo ? `<button class="life-photo" type="button" data-bird-photo="${item.photo.id}" data-photo-source="log">${photoImage(item.photo, "")}</button>` : ""}
         <div><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.location || "未填地点")}</p></div>
         <strong>${item.count}</strong>
       </header>
@@ -966,7 +1156,8 @@ function projectCard(item, path) {
 function detailCard(title, sub, pills, editTarget) {
   const attrs = editTarget?.id ? ` data-edit-group="${editTarget.group}" data-edit-list="${editTarget.list}" data-edit-id="${editTarget.id}"` : "";
   const hint = editTarget?.id ? `<small class="edit-hint">点按编辑</small>` : "";
-  return `<article class="list-card calendar-detail-card"${attrs}><h3>${escapeHtml(title)}</h3><p>${escapeHtml(sub || "")}</p><div class="pills">${pills.filter(Boolean).map((pill) => `<span class="pill">${escapeHtml(pill)}</span>`).join("")}</div>${hint}</article>`;
+  const photo = editTarget?.photoSrc ? `<img class="detail-thumb" src="${escapeHtml(editTarget.photoSrc)}" alt="">` : "";
+  return `<article class="list-card calendar-detail-card"${attrs}>${photo}<h3>${escapeHtml(title)}</h3><p>${escapeHtml(sub || "")}</p><div class="pills">${pills.filter(Boolean).map((pill) => `<span class="pill">${escapeHtml(pill)}</span>`).join("")}</div>${hint}</article>`;
 }
 
 function card(item, path, title, sub, pills, body, allowHtml = false) {
@@ -996,7 +1187,7 @@ function crochetStats() {
 
 function calendarTimeline() {
   const events = [
-    ...data.birding.logs.map((x) => ({ date: x.date, time: x.time || "08:00", label: `观鸟-${x.species || "记录"}`, detail: x.location || x.note || "", type: "观鸟", kind: "birding", group: "birding", list: "logs", id: x.id })),
+    ...data.birding.logs.map((x) => ({ date: x.date, time: x.time || "08:00", label: `观鸟-${x.species || "记录"}`, detail: x.location || x.note || "", type: "观鸟", kind: "birding", group: "birding", list: "logs", id: x.id, photoSrc: photoSrc(x) })),
     ...data.fitness.dailyPlans.map((x) => ({ date: x.date, time: x.time || "09:00", label: `健身-${x.theme}`, detail: `${x.level}级 ${x.title}`, type: "健身", kind: "fitness", group: "fitness", list: "dailyPlans", id: x.id })),
     ...data.fitness.workouts.map((x) => ({ date: x.date, time: x.time || "20:00", label: `健身-${x.exercise || "打卡"}`, detail: x.load || x.note || "", type: "健身", kind: "fitness", group: "fitness", list: "workouts", id: x.id })),
     ...data.crochet.sessions.map((x) => ({ date: x.date, time: x.time || "21:00", label: `钩织-${x.projectName || "打卡"}`, detail: x.progress || x.note || "", type: "钩织", kind: "crochet", group: "crochet", list: "sessions", id: x.id }))
@@ -1063,6 +1254,7 @@ function calendarEditConfig(group, list) {
         ["species", "鸟种", "text", "", "白鹭"],
         ["location", "地点", "text", "", "河边湿地"],
         ["count", "数量", "number", "1"],
+        ["photo", "图片链接/文件名", "text", "", "链接或文件名"],
         ["note", "备注", "textarea", "", "行为、天气、识别依据"]
       ]
     },
