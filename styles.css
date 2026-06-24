@@ -442,7 +442,11 @@ textarea:focus {
 }
 
 .fitness-home {
-  grid-template-rows: auto 1fr auto auto;
+  grid-template-rows: auto 1fr auto;
+}
+
+.fitness-home.has-plan {
+  grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
 .today-card,
@@ -450,7 +454,8 @@ textarea:focus {
 .result-mini,
 .question-card,
 .grade-card,
-.plan-card {
+.plan-card,
+.fitness-plan-main {
   background: rgba(255, 250, 240, .86);
   border: 1px solid rgba(224, 210, 184, .92);
   border-radius: 20px;
@@ -507,8 +512,63 @@ textarea:focus {
 
 .mini-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
+}
+
+.has-plan .mini-actions {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.fitness-plan-main {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
+  min-height: 0;
+  padding: 12px;
+}
+
+.fitness-plan-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.fitness-plan-head strong {
+  color: var(--leaf-dark);
+  font-size: 25px;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.fitness-plan-head span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fitness-plan-main .plan-card {
+  min-height: 0;
+  padding: 12px;
+  box-shadow: none;
+}
+
+.fitness-plan-main .plan-card h2 {
+  font-size: 20px;
+}
+
+.fitness-plan-main .plan-lines {
+  gap: 6px;
+}
+
+.fitness-plan-main .plan-lines p {
+  font-size: 12px;
+  line-height: 1.32;
 }
 
 .question-screen,
@@ -623,9 +683,16 @@ textarea:focus {
 .calendar {
   display: grid;
   grid-template-rows: auto auto 1fr;
-  gap: 8px;
+  gap: 7px;
   height: 100%;
-  padding: 12px;
+  padding: 10px;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(255, 252, 246, .92), rgba(246, 234, 213, .82)),
+    radial-gradient(circle at 20% 0, rgba(255, 238, 166, .32), transparent 36%);
+  border-color: rgba(216, 199, 167, .86);
+  border-radius: 18px;
+  box-shadow: 0 12px 28px rgba(116, 96, 58, .11);
 }
 
 .calendar-head {
@@ -643,7 +710,7 @@ textarea:focus {
 .month-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
+  gap: 3px;
 }
 
 .week span {
@@ -659,10 +726,11 @@ textarea:focus {
   gap: 2px;
   min-height: 0;
   position: relative;
-  padding: 5px 4px;
-  border: 1px solid rgba(224, 210, 184, .65);
-  border-radius: 12px;
-  background: rgba(255, 252, 246, .58);
+  overflow: visible;
+  padding: 4px 3px;
+  border: 1px solid rgba(218, 202, 171, .58);
+  border-radius: 10px;
+  background: rgba(255, 253, 247, .62);
   color: var(--ink);
   font-size: 12px;
   cursor: pointer;
@@ -674,9 +742,10 @@ textarea:focus {
 }
 
 .day.today {
-  border-color: var(--leaf);
+  border-color: #93a76d;
   color: var(--leaf-dark);
   font-weight: 900;
+  background: rgba(255, 252, 235, .9);
 }
 
 .day-num {
@@ -688,7 +757,7 @@ textarea:focus {
   overflow: hidden;
   max-width: 100%;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 8px;
   line-height: 1.1;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -696,30 +765,108 @@ textarea:focus {
 
 .span-stack {
   display: grid;
-  gap: 2px;
+  gap: 1px;
   width: 100%;
-  min-height: 12px;
+  min-height: 11px;
+  position: relative;
+  z-index: 2;
 }
 
 .span-band {
   display: block;
   overflow: hidden;
-  height: 8px;
-  width: 100%;
-  padding-left: 2px;
-  border-radius: 999px;
-  background: rgba(96, 119, 90, .45);
-  color: var(--leaf-dark);
+  height: 7px;
+  width: calc(100% + 6px);
+  margin-left: -3px;
+  margin-right: -3px;
+  padding-left: 4px;
+  border-radius: 2px;
+  background:
+    linear-gradient(90deg, rgba(255, 225, 83, .78), rgba(180, 218, 101, .72));
+  color: #52612f;
   font-size: 7px;
+  font-weight: 900;
   font-style: normal;
-  line-height: 8px;
+  line-height: 7px;
+  box-shadow: 0 0 0 1px rgba(244, 208, 63, .08), 0 2px 6px rgba(163, 142, 52, .12);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .span-band.dashed {
-  background: repeating-linear-gradient(90deg, rgba(96, 119, 90, .38) 0 5px, transparent 5px 8px);
-  border: 1px dashed rgba(96, 119, 90, .55);
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 225, 83, .76) 0 8px, transparent 8px 12px),
+    repeating-linear-gradient(90deg, rgba(155, 205, 92, .62) 0 6px, transparent 6px 12px);
+  box-shadow: none;
+}
+
+.calendar-detail-card {
+  cursor: pointer;
+}
+
+.calendar-detail-card:active {
+  transform: translateY(1px);
+}
+
+.edit-hint {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+@media (max-height: 740px) {
+  .app {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .phone {
+    gap: 8px;
+  }
+
+  .top {
+    min-height: 38px;
+  }
+
+  .back,
+  .settings-button {
+    width: 38px;
+    height: 38px;
+  }
+
+  .title h1 {
+    font-size: 16px;
+  }
+
+  .title p,
+  .week span {
+    font-size: 10px;
+  }
+
+  .nav-item,
+  .button,
+  .ghost,
+  .danger {
+    min-height: 38px;
+    padding: 6px;
+  }
+
+  .calendar {
+    gap: 5px;
+    padding: 8px;
+  }
+
+  .calendar-head strong {
+    font-size: 16px;
+  }
+
+  .day {
+    padding: 3px 2px;
+  }
+
+  .day-main {
+    font-size: 7px;
+  }
 }
 
 .hidden-input {

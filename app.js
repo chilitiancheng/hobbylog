@@ -178,6 +178,7 @@ const routes = {
   "list-projects": () => listPageView("作品列表", "crochet", "projects", "crochet", projectCard),
   calendar: renderCalendar,
   "calendar-day": renderCalendarDay,
+  "calendar-edit": renderCalendarEdit,
   settings: renderSettings
 };
 
@@ -240,23 +241,36 @@ function renderHome() {
 function renderFitness() {
   const latest = latestFitnessPlan();
   const theme = todayTheme();
+  const main = latest ? `
+      <div class="fitness-plan-main level-${latest.level}">
+        <div class="fitness-plan-head">
+          <strong>${latest.level}级</strong>
+          <span>${latest.summary}</span>
+        </div>
+        <div class="plan-card">
+          <span>今日计划</span>
+          <h2>${latest.title}</h2>
+          <div class="plan-lines">
+            ${latest.lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("")}
+          </div>
+        </div>
+      </div>
+    ` : `
+      <a class="primary-tile" href="#fitness-checkin" data-reset-checkin="1">
+        <strong>开始今日判断</strong>
+        <span>一题一答，生成今日计划</span>
+      </a>
+    `;
   return shell("home", "健身", "今天先判断，再训练", `
-    <section class="fitness-home">
+    <section class="fitness-home ${latest ? "has-plan" : ""}">
       <div class="today-card">
         <span>今日主题</span>
         <strong>${theme.label}</strong>
         <p>${theme.short}</p>
       </div>
-      <a class="primary-tile" href="#fitness-checkin" data-reset-checkin="1">
-        <strong>开始今日判断</strong>
-        <span>一题一答，生成今日计划</span>
-      </a>
-      <div class="result-mini">
-        <span>最近结果</span>
-        <strong>${latest ? `${latest.level}级` : "未判断"}</strong>
-        <p>${latest ? latest.summary : "完成问卷后会显示今日建议。"}</p>
-      </div>
+      ${main}
       <div class="mini-actions">
+        ${latest ? `<a class="ghost" href="#fitness-checkin" data-reset-checkin="1">重测</a>` : ""}
         <a class="ghost" href="#workout">训练打卡</a>
         <a class="ghost" href="#body">身体数据</a>
       </div>
@@ -289,25 +303,15 @@ function renderFitnessResult() {
   const latest = latestFitnessPlan();
   if (!latest) return renderFitness();
   return shell("fitness", "今日计划", "按状态生成", `
-    <section class="result-screen">
-      <div class="grade-card level-${latest.level}">
-        <div>
-          <span>等级</span>
-          <strong>${latest.level}</strong>
-        </div>
-        <p>${latest.summary}</p>
-      </div>
-      <div class="plan-card">
-        <span>今日计划</span>
-        <h2>${latest.title}</h2>
-        <div class="plan-lines">
-          ${latest.lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("")}
-        </div>
+    <section class="result-screen result-redirect">
+      <div class="compact-note">
+        <h2>${latest.level}级 · 已写入健身主页</h2>
+        <p>${escapeHtml(latest.summary)}</p>
       </div>
       <div class="pager">
         <a class="ghost" href="#fitness-checkin" data-reset-checkin="1">重测</a>
-        <a class="button" href="#workout">记录</a>
-        <a class="ghost" href="#fitness">返回</a>
+        <a class="button" href="#fitness">查看计划</a>
+        <a class="ghost" href="#workout">记录</a>
       </div>
     </section>
   `, "");
@@ -340,6 +344,32 @@ function formPage(title, group, list, backRoute, fields, afterSave) {
         <a class="ghost" href="#${backRoute}">取消</a>
         <button class="button" type="submit">保存</button>
         <a class="ghost" href="#settings">备份</a>
+      </div>
+    </form>
+  `, "");
+}
+
+function renderCalendarEdit() {
+  const target = data.calendar.edit || {};
+  const config = calendarEditConfig(target.group, target.list);
+  const item = config && findItem(target.group, target.list, target.id);
+  if (!config || !item) {
+    return shell("calendar-day", "编辑记录", "未找到可编辑内容", `
+      <section class="list">
+        <div class="compact-note"><h2>记录已不存在</h2><p>回到日历详情重新选择一条记录。</p></div>
+        <div class="pager"><a class="button" href="#calendar-day">返回</a></div>
+      </section>
+    `, "");
+  }
+  return shell("calendar-day", config.title, "修改后会保存到本机", `
+    <form class="form" data-edit-form data-group="${target.group}" data-list="${target.list}" data-id="${target.id}">
+      <div class="fields">
+        ${config.fields.map((spec) => field(fieldWithValue(spec, item))).join("")}
+      </div>
+      <div class="form-actions">
+        <a class="ghost" href="#calendar-day">取消</a>
+        <button class="button" type="submit">保存</button>
+        <a class="ghost" href="#calendar">日历</a>
       </div>
     </form>
   `, "");
@@ -413,8 +443,8 @@ function renderCalendarDay() {
     <section class="list">
       <div class="hint">${events.length || spans.length ? "当天记录" : "这天还没有记录。"}</div>
       <div class="list-stack">
-        ${events.map((event) => detailCard(event.label, event.detail, [event.type])).join("")}
-        ${spans.map((span) => detailCard(`钩织-${span.name}`, isCrochetActive(span, selected) ? "当天有钩织打卡" : "跨度内未打卡，日历用虚线", [span.start, span.end])).join("")}
+        ${events.map((event) => detailCard(event.label, event.detail, [event.type], event)).join("")}
+        ${spans.map((span) => detailCard(`钩织-${span.name}`, isCrochetActive(span, selected) ? "当天有钩织打卡" : "跨度内未打卡，日历用虚线", [span.start, span.end], { group: "crochet", list: "projects", id: span.id })).join("")}
         ${!events.length && !spans.length ? `<div class="compact-note"><h2>空白的一天</h2><p>新增记录后会出现在这里。</p></div>` : ""}
       </div>
       <div class="pager">
@@ -488,6 +518,15 @@ function field([name, label, type, value = "", placeholder = ""]) {
 }
 
 function onSubmit(event) {
+  const editForm = event.target.closest("[data-edit-form]");
+  if (editForm) {
+    event.preventDefault();
+    updateCalendarItem(editForm);
+    saveData();
+    location.hash = "calendar-day";
+    return;
+  }
+
   const form = event.target.closest("[data-form]");
   if (!form) return;
   event.preventDefault();
@@ -535,6 +574,18 @@ function onClick(event) {
     data.calendar.selectedDate = day.dataset.calendarDay;
     saveData();
     location.hash = "calendar-day";
+    return;
+  }
+
+  const editCard = event.target.closest("[data-edit-id]");
+  if (editCard) {
+    data.calendar.edit = {
+      group: editCard.dataset.editGroup,
+      list: editCard.dataset.editList,
+      id: editCard.dataset.editId
+    };
+    saveData();
+    location.hash = "calendar-edit";
     return;
   }
 
@@ -694,8 +745,10 @@ function projectCard(item, path) {
   return card(item, path, item.name || "钩织作品", item.progress || "", [item.material, item.start, item.expectedEnd || item.end], item.note);
 }
 
-function detailCard(title, sub, pills) {
-  return `<article class="list-card"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(sub || "")}</p><div class="pills">${pills.filter(Boolean).map((pill) => `<span class="pill">${escapeHtml(pill)}</span>`).join("")}</div></article>`;
+function detailCard(title, sub, pills, editTarget) {
+  const attrs = editTarget?.id ? ` data-edit-group="${editTarget.group}" data-edit-list="${editTarget.list}" data-edit-id="${editTarget.id}"` : "";
+  const hint = editTarget?.id ? `<small class="edit-hint">点按编辑</small>` : "";
+  return `<article class="list-card calendar-detail-card"${attrs}><h3>${escapeHtml(title)}</h3><p>${escapeHtml(sub || "")}</p><div class="pills">${pills.filter(Boolean).map((pill) => `<span class="pill">${escapeHtml(pill)}</span>`).join("")}</div>${hint}</article>`;
 }
 
 function card(item, path, title, sub, pills, body, allowHtml = false) {
@@ -725,10 +778,10 @@ function crochetStats() {
 
 function calendarTimeline() {
   const events = [
-    ...data.birding.logs.map((x) => ({ date: x.date, time: x.time || "08:00", label: `观鸟-${x.species || "记录"}`, detail: x.location || x.note || "", type: "观鸟", kind: "birding" })),
-    ...data.fitness.dailyPlans.map((x) => ({ date: x.date, time: x.time || "09:00", label: `健身-${x.theme}`, detail: `${x.level}级 ${x.title}`, type: "健身", kind: "fitness" })),
-    ...data.fitness.workouts.map((x) => ({ date: x.date, time: x.time || "20:00", label: `健身-${x.exercise || "打卡"}`, detail: x.load || x.note || "", type: "健身", kind: "fitness" })),
-    ...data.crochet.sessions.map((x) => ({ date: x.date, time: x.time || "21:00", label: `钩织-${x.projectName || "打卡"}`, detail: x.progress || x.note || "", type: "钩织", kind: "crochet" }))
+    ...data.birding.logs.map((x) => ({ date: x.date, time: x.time || "08:00", label: `观鸟-${x.species || "记录"}`, detail: x.location || x.note || "", type: "观鸟", kind: "birding", group: "birding", list: "logs", id: x.id })),
+    ...data.fitness.dailyPlans.map((x) => ({ date: x.date, time: x.time || "09:00", label: `健身-${x.theme}`, detail: `${x.level}级 ${x.title}`, type: "健身", kind: "fitness", group: "fitness", list: "dailyPlans", id: x.id })),
+    ...data.fitness.workouts.map((x) => ({ date: x.date, time: x.time || "20:00", label: `健身-${x.exercise || "打卡"}`, detail: x.load || x.note || "", type: "健身", kind: "fitness", group: "fitness", list: "workouts", id: x.id })),
+    ...data.crochet.sessions.map((x) => ({ date: x.date, time: x.time || "21:00", label: `钩织-${x.projectName || "打卡"}`, detail: x.progress || x.note || "", type: "钩织", kind: "crochet", group: "crochet", list: "sessions", id: x.id }))
   ].filter((x) => x.date);
 
   const spans = data.crochet.projects
@@ -760,6 +813,88 @@ function isCrochetActive(span, date) {
 
 function dateInRange(date, start, end) {
   return date >= start && date <= end;
+}
+
+function calendarEditConfig(group, list) {
+  const configs = {
+    "fitness.dailyPlans": {
+      title: "编辑健身计划",
+      fields: [
+        ["date", "日期", "date"],
+        ["theme", "主题", "text", "", "下肢 / 上肢"],
+        ["level", "等级", "text", "", "A"],
+        ["title", "内容", "text", "", "今日训练"],
+        ["summary", "备注", "textarea", "", "状态与调整"]
+      ]
+    },
+    "fitness.workouts": {
+      title: "编辑训练打卡",
+      fields: [
+        ["date", "日期", "date"],
+        ["exercise", "动作", "text", "", "深蹲"],
+        ["sets", "组数", "number"],
+        ["reps", "次数", "text", "", "12 / 45s"],
+        ["load", "重量/时长", "text", "", "20kg / 30min"],
+        ["note", "备注", "textarea", "", "今天练了什么"]
+      ]
+    },
+    "birding.logs": {
+      title: "编辑观察记录",
+      fields: [
+        ["date", "日期", "date"],
+        ["species", "鸟种", "text", "", "白鹭"],
+        ["location", "地点", "text", "", "河边湿地"],
+        ["count", "数量", "number", "1"],
+        ["note", "备注", "textarea", "", "行为、天气、识别依据"]
+      ]
+    },
+    "crochet.sessions": {
+      title: "编辑钩织打卡",
+      fields: [
+        ["date", "日期", "date"],
+        ["projectName", "作品", "text", "", "毯子"],
+        ["progress", "进度", "text", "", "42% / 第12行"],
+        ["note", "备注", "textarea", "", "今天织了什么"]
+      ]
+    },
+    "crochet.projects": {
+      title: "编辑钩织项目",
+      fields: [
+        ["name", "作品名", "text", "", "春日杯垫"],
+        ["progress", "进度", "text", "", "35%"],
+        ["material", "材料", "text", "", "棉线"],
+        ["start", "开始", "date"],
+        ["expectedEnd", "预计结束", "date"],
+        ["end", "完成日", "date"],
+        ["note", "备注", "textarea", "", "针法、图片引用、想法"]
+      ]
+    }
+  };
+  return configs[`${group}.${list}`] || null;
+}
+
+function fieldWithValue(spec, item) {
+  const next = [...spec];
+  next[3] = item[spec[0]] ?? spec[3] ?? "";
+  return next;
+}
+
+function findItem(group, list, itemId) {
+  return data[group]?.[list]?.find((item) => item.id === itemId);
+}
+
+function updateCalendarItem(form) {
+  const config = calendarEditConfig(form.dataset.group, form.dataset.list);
+  const item = config && findItem(form.dataset.group, form.dataset.list, form.dataset.id);
+  if (!item) return;
+  const values = Object.fromEntries(new FormData(form).entries());
+  config.fields.forEach(([name]) => {
+    item[name] = values[name] ?? "";
+  });
+  item.updatedAt = new Date().toISOString();
+  if (form.dataset.group === "birding" && form.dataset.list === "logs") afterBirdLog(item);
+  if (item.date) data.calendar.selectedDate = item.date;
+  if (item.start && !item.date) data.calendar.selectedDate = item.start;
 }
 
 function removeItem(path, itemId) {
