@@ -311,14 +311,16 @@ function renderFitness() {
         </div>
       </div>
     ` : `
-      <a class="primary-tile" href="#fitness-checkin" data-reset-checkin="1">
+      <a class="primary-tile decorated-card fitness-decor" href="#fitness-checkin" data-reset-checkin="1">
+        <img class="card-decor" src="assets/pigeon-home.webp" alt="" aria-hidden="true" loading="lazy">
         <strong>开始今日判断</strong>
         <span>一题一答，生成今日计划</span>
       </a>
     `;
   return shell("home", "健身", "今天先判断，再训练", `
     <section class="fitness-home ${todaysPlan ? "has-plan" : ""}">
-      <div class="today-card">
+      <div class="today-card decorated-card fitness-decor">
+        <img class="card-decor" src="assets/pigeon-home.webp" alt="" aria-hidden="true" loading="lazy">
         <span>今日主题</span>
         <strong>${theme.label}</strong>
         <p>${theme.short}</p>
@@ -398,11 +400,13 @@ function renderBirding() {
   const seenCount = seenBirds().length;
   return shell("home", "观鸟", "先记下遇见，再慢慢确认", `
     <section class="bird-home">
-      <a class="primary-tile bird-tile" href="#bird-log">
+      <a class="primary-tile bird-tile decorated-card bird-log-decor" href="#bird-log">
+        <img class="card-decor" src="assets/pigeon-home.webp" alt="" aria-hidden="true" loading="lazy">
         <strong>快速记录</strong>
         <span>${latest ? `最近：${latest.species || "未知鸟"} · ${latest.location || "未填地点"}` : "鸟种、地点、数量、确定程度"}</span>
       </a>
-      <a class="primary-tile pending-tile" href="#bird-pending">
+      <a class="primary-tile pending-tile decorated-card bird-pending-decor" href="#bird-pending">
+        <img class="card-decor" src="assets/pigeon-home.webp" alt="" aria-hidden="true" loading="lazy">
         <strong>待确认</strong>
         <span>${pending ? `${pending} 条还需要回看` : "把不确定留在这里"}</span>
       </a>
@@ -512,7 +516,8 @@ function renderCrochet() {
   return shell("home", "钩织", "作品进度台", `
     <section class="crochet-home">
       ${project ? `
-        <button class="project-hero" data-project-detail="${project.id}">
+        <button class="project-hero decorated-card crochet-decor" data-project-detail="${project.id}">
+          <img class="card-decor" src="assets/pigeon-home.webp" alt="" aria-hidden="true" loading="lazy">
           <span>当前作品</span>
           <strong>${escapeHtml(project.name)}</strong>
           <p>${escapeHtml(project.progress || project.status || "进行中")}</p>
@@ -521,13 +526,15 @@ function renderCrochet() {
           </div>
         </button>
       ` : `
-        <a class="project-hero" href="#project">
+        <a class="project-hero decorated-card crochet-decor" href="#project">
+          <img class="card-decor" src="assets/pigeon-home.webp" alt="" aria-hidden="true" loading="lazy">
           <span>当前作品</span>
           <strong>新建第一件作品</strong>
           <p>从开工日期开始，日历会出现连续色带。</p>
         </a>
       `}
-      <a class="primary-tile crochet-tile" href="#crochet-session">
+      <a class="primary-tile crochet-tile decorated-card crochet-session-decor" href="#crochet-session">
+        <img class="card-decor" src="assets/pigeon-home.webp" alt="" aria-hidden="true" loading="lazy">
         <strong>今日钩织打卡</strong>
         <span>${session ? `最近：${session.date} ${session.progress || session.note || ""}` : "记录今天推进了什么"}</span>
       </a>
