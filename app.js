@@ -283,7 +283,8 @@ function homeBirdingSummary() {
   if (!latest) {
     return { main: "未记录", meta: "Today", thumb: "" };
   }
-  const thumb = photo ? `<span class="summary-thumb"><img src="${escapeHtml(photo.src)}" alt=""></span>` : "";
+  const thumbSrc = photo?.src || "assets/pigeon-home.webp";
+  const thumb = `<span class="summary-thumb"><img src="${escapeHtml(thumbSrc)}" alt=""></span>`;
   return {
     main: escapeHtml(latest.species || "未命名"),
     meta: escapeHtml(latest.location || latest.date || "观察记录"),
