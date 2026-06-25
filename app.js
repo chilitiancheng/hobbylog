@@ -246,10 +246,10 @@ function renderHome() {
           <span class="summary-main">${crochet.main}</span>
           <span class="summary-meta">${crochet.meta}</span>
         </a>
-        <a class="summary-row has-thumb" href="#birding">
-          ${birding.thumb}
+        <a class="summary-row${birding.thumb ? " has-thumb" : ""}" href="#birding">
           <span class="summary-label">观鸟</span>
           <span class="summary-main">${birding.main}</span>
+          ${birding.thumb}
           <span class="summary-meta">${birding.meta}</span>
         </a>
       </div>
