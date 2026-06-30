@@ -588,7 +588,8 @@ a {
 }
 
 .bottom-nav {
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
 }
 
 .nav-item,
@@ -636,7 +637,85 @@ a {
 
 .nav-item {
   min-width: 0;
+  min-height: 39px;
+  padding: 7px 4px;
+  border-radius: 12px;
+  font-size: 10px;
+}
+
+.terms-page {
+  grid-template-rows: 1fr;
+}
+
+.term-groups,
+.term-list {
+  gap: 10px;
+}
+
+.term-group-card,
+.term-list-card {
+  display: grid;
+  gap: 7px;
+  min-height: 0;
+  padding: 13px 14px;
+  background: rgba(255, 250, 240, .76);
+  border: 1px solid rgba(224, 210, 184, .8);
+  border-radius: 16px;
+  box-shadow: 0 10px 20px rgba(70, 58, 38, .07);
+}
+
+.term-group-card {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.term-group-card span {
+  display: grid;
+  gap: 3px;
+}
+
+.term-group-card strong,
+.term-list-card strong {
+  color: var(--leaf-dark);
+  font-size: 17px;
+  line-height: 1.15;
+}
+
+.term-group-card small {
+  color: var(--muted);
   font-size: 11px;
+  font-weight: 800;
+}
+
+.term-group-card em {
+  max-width: 132px;
+  overflow: hidden;
+  color: var(--clay);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: right;
+}
+
+.term-list {
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.term-list-card {
+  align-content: start;
+}
+
+.term-list-card p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .form {

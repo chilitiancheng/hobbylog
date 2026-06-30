@@ -85,20 +85,95 @@ document.addEventListener("pointerdown", onPointerDown);
 document.addEventListener("pointerup", onPointerUp);
 
 const techCards = [
-  { term: "Loss 函数", plain: "模型做错时的扣分表，分越低说明它越接近答案。" },
-  { term: "过拟合", plain: "把练习题背熟了，但换一道新题就容易翻车。" },
-  { term: "训练集", plain: "拿来教模型的例题本，模型先在这里反复练。" },
-  { term: "Embedding", plain: "把文字、图片或用户变成一串数字，让机器能比较它们像不像。" },
-  { term: "吞吐量", plain: "系统一口气能处理多少请求，像厨房每分钟能出几份餐。" },
-  { term: "AUC", plain: "看模型排序能力的分数，越高越会把重要的排前面。" },
-  { term: "JSON", plain: "前后端传小纸条常用的格式，名字和值一对一写清楚。" },
-  { term: "Request ID", plain: "每次请求的小票号，出问题时可以按这个号追踪。" },
-  { term: "Token", plain: "模型读写文字时切成的小块，计费和长度常按它算。" },
-  { term: "Latency", plain: "从发出请求到拿到回应的等待时间，越短越利落。" },
-  { term: "Batch Size", plain: "一次塞给模型练习或处理的样本数量，太大太小都影响效率。" },
-  { term: "向量数据库", plain: "专门存 Embedding 的仓库，用来快速找到语义相近的东西。" }
+  { term: "Loss 函数", plain: "模型做错时扣的分，越低说明越接近答案。", group: "AI/ML 基础" },
+  { term: "过拟合", plain: "把练习题背熟了，换新题就容易翻车。", group: "AI/ML 基础" },
+  { term: "欠拟合", plain: "模型还没学明白，简单规律也抓不住。", group: "AI/ML 基础" },
+  { term: "训练集", plain: "拿来教模型的例题本。", group: "AI/ML 基础" },
+  { term: "验证集", plain: "训练中用来检查方向有没有跑偏的小测验。", group: "AI/ML 基础" },
+  { term: "测试集", plain: "最后验收用的新题，不能提前偷看。", group: "AI/ML 基础" },
+  { term: "Embedding", plain: "把文字、图片或用户变成数字坐标，方便比较像不像。", group: "AI/ML 基础" },
+  { term: "梯度下降", plain: "沿着错误变小的方向，一点点调参数。", group: "AI/ML 基础" },
+  { term: "学习率", plain: "每次改参数的步子大小，太大太小都麻烦。", group: "AI/ML 基础" },
+  { term: "参数", plain: "模型脑子里可调整的旋钮。", group: "AI/ML 基础" },
+  { term: "权重", plain: "告诉模型某个线索有多重要的数字。", group: "AI/ML 基础" },
+  { term: "偏置", plain: "模型起步时自带的一点倾向。", group: "AI/ML 基础" },
+  { term: "特征", plain: "喂给模型看的线索，比如价格、长度、颜色。", group: "AI/ML 基础" },
+  { term: "标签", plain: "样本的标准答案。", group: "AI/ML 基础" },
+  { term: "分类", plain: "让模型判断它属于哪一类。", group: "AI/ML 基础" },
+  { term: "回归", plain: "让模型预测一个数字，比如价格或温度。", group: "AI/ML 基础" },
+  { term: "监督学习", plain: "带答案教模型做题。", group: "AI/ML 基础" },
+  { term: "无监督学习", plain: "不给答案，让模型自己找相似和规律。", group: "AI/ML 基础" },
+  { term: "强化学习", plain: "做对给奖励，做错扣分，让系统学策略。", group: "AI/ML 基础" },
+  { term: "神经网络", plain: "很多小计算单元连在一起学规律。", group: "AI/ML 基础" },
+  { term: "激活函数", plain: "决定一个神经元要不要把信号继续传下去。", group: "AI/ML 基础" },
+  { term: "Epoch", plain: "训练数据完整看过一轮。", group: "AI/ML 基础" },
+  { term: "Batch Size", plain: "一次塞给模型学习或处理的样本数量。", group: "AI/ML 基础" },
+  { term: "Checkpoint", plain: "训练中存下来的模型存档点。", group: "AI/ML 基础" },
+  { term: "微调", plain: "拿已有模型继续教，让它更适合某个任务。", group: "AI/ML 基础" },
+  { term: "蒸馏", plain: "让小模型学大模型的答题方式。", group: "AI/ML 基础" },
+  { term: "正则化", plain: "给模型加约束，防止它把题背死。", group: "AI/ML 基础" },
+  { term: "Dropout", plain: "训练时随机关掉一部分神经元，让模型别太依赖单一路径。", group: "AI/ML 基础" },
+  { term: "Token", plain: "模型读写文字时切成的小块。", group: "LLM/生成式 AI" },
+  { term: "Prompt", plain: "你给模型的指令和上下文。", group: "LLM/生成式 AI" },
+  { term: "上下文窗口", plain: "模型一次能看见的文字范围。", group: "LLM/生成式 AI" },
+  { term: "幻觉", plain: "模型说得很像真的，但其实编错了。", group: "LLM/生成式 AI" },
+  { term: "RAG", plain: "先查资料，再让模型带着资料回答。", group: "LLM/生成式 AI" },
+  { term: "Agent", plain: "会拆任务、用工具、按步骤推进的 AI 助手。", group: "LLM/生成式 AI" },
+  { term: "向量数据库", plain: "专门存 Embedding，用来找语义相近内容。", group: "LLM/生成式 AI" },
+  { term: "System Prompt", plain: "放在最前面的底层规则，决定模型怎么工作。", group: "LLM/生成式 AI" },
+  { term: "Temperature", plain: "控制回答发散程度，越高越有变化。", group: "LLM/生成式 AI" },
+  { term: "Top-p", plain: "限制模型从多大范围里挑下一个词。", group: "LLM/生成式 AI" },
+  { term: "Function Calling", plain: "让模型按固定格式调用外部工具。", group: "LLM/生成式 AI" },
+  { term: "Tool Use", plain: "模型不只聊天，还能查资料、算东西、改文件。", group: "LLM/生成式 AI" },
+  { term: "Grounding", plain: "把回答绑定到可靠资料上，减少瞎编。", group: "LLM/生成式 AI" },
+  { term: "检索", plain: "从资料库里先找相关内容。", group: "LLM/生成式 AI" },
+  { term: "重排序", plain: "把搜到的结果重新排队，最有用的放前面。", group: "LLM/生成式 AI" },
+  { term: "上下文污染", plain: "无关或错误信息混进提示，影响回答质量。", group: "LLM/生成式 AI" },
+  { term: "Few-shot", plain: "给几个示例，让模型照着格式做。", group: "LLM/生成式 AI" },
+  { term: "Zero-shot", plain: "不给示例，直接让模型完成任务。", group: "LLM/生成式 AI" },
+  { term: "Chain of Thought", plain: "把推理过程拆开想，但不一定要全部展示。", group: "LLM/生成式 AI" },
+  { term: "Safety Filter", plain: "拦住不该输出的内容。", group: "LLM/生成式 AI" },
+  { term: "JSON", plain: "前后端传小纸条常用的结构化格式。", group: "API/工程" },
+  { term: "Request ID", plain: "每次请求的小票号，出问题时靠它追踪。", group: "API/工程" },
+  { term: "Endpoint", plain: "接口地址，像服务窗口的门牌号。", group: "API/工程" },
+  { term: "Header", plain: "请求附带的抬头信息，比如身份和格式。", group: "API/工程" },
+  { term: "Body", plain: "请求真正携带的正文内容。", group: "API/工程" },
+  { term: "Latency", plain: "从发出请求到拿到回应的等待时间。", group: "API/工程" },
+  { term: "吞吐量", plain: "系统一口气能处理多少请求。", group: "API/工程" },
+  { term: "Rate Limit", plain: "接口限速，防止请求太密把服务打爆。", group: "API/工程" },
+  { term: "API Key", plain: "调用接口用的钥匙，要保密。", group: "API/工程" },
+  { term: "OAuth", plain: "不交出密码，也能授权别人访问部分数据。", group: "API/工程" },
+  { term: "CORS", plain: "浏览器检查这个网页能不能访问那个接口。", group: "API/工程" },
+  { term: "Webhook", plain: "有事件发生时，系统主动通知你。", group: "API/工程" },
+  { term: "SDK", plain: "别人封好的工具包，让接入更省事。", group: "API/工程" },
+  { term: "CLI", plain: "在命令行里操作工具。", group: "API/工程" },
+  { term: "缓存", plain: "把常用结果先存起来，下次更快。", group: "API/工程" },
+  { term: "CDN", plain: "把静态资源放到离用户更近的地方。", group: "API/工程" },
+  { term: "部署", plain: "把本地做好的东西放到线上运行。", group: "API/工程" },
+  { term: "CI/CD", plain: "代码提交后自动测试、构建、发布。", group: "API/工程" },
+  { term: "日志", plain: "系统运行时留下的记录。", group: "API/工程" },
+  { term: "错误码", plain: "服务用数字告诉你哪里出问题了。", group: "API/工程" },
+  { term: "准确率", plain: "所有判断里，有多少判断对了。", group: "数据/评估" },
+  { term: "召回率", plain: "真正该找出来的东西，找回了多少。", group: "数据/评估" },
+  { term: "精确率", plain: "模型说是的里面，有多少真的是。", group: "数据/评估" },
+  { term: "F1", plain: "把精确率和召回率合成一个平衡分。", group: "数据/评估" },
+  { term: "AUC", plain: "看模型排序能力的分数，越高越会排重点。", group: "数据/评估" },
+  { term: "混淆矩阵", plain: "把对的、错的、漏的、误报的放进一张表。", group: "数据/评估" },
+  { term: "真阳性", plain: "本来就是目标，模型也判断成目标。", group: "数据/评估" },
+  { term: "假阳性", plain: "不是目标，却被模型误判成目标。", group: "数据/评估" },
+  { term: "假阴性", plain: "明明是目标，模型却漏掉了。", group: "数据/评估" },
+  { term: "数据清洗", plain: "把重复、错误、脏数据先整理干净。", group: "数据/评估" },
+  { term: "数据标注", plain: "给样本贴标准答案。", group: "数据/评估" },
+  { term: "Pipeline", plain: "把一串处理步骤接成流水线。", group: "数据/评估" },
+  { term: "Schema", plain: "规定数据该长什么样。", group: "数据/评估" },
+  { term: "缺失值", plain: "表格里该有但空着的数据。", group: "数据/评估" },
+  { term: "异常值", plain: "明显不太正常、可能影响判断的数据点。", group: "数据/评估" },
+  { term: "采样", plain: "从一大堆数据里抽一部分来用。", group: "数据/评估" },
+  { term: "偏差", plain: "数据或模型天然偏向某些结果。", group: "数据/评估" },
+  { term: "漂移", plain: "现实数据变了，模型旧经验开始不准。", group: "数据/评估" },
+  { term: "基线", plain: "先做一个简单版本，用来比较新方案值不值。", group: "数据/评估" },
+  { term: "消融实验", plain: "拿掉一个模块，看它到底有没有贡献。", group: "数据/评估" }
 ];
-
 const routes = {
   home: renderHome,
   birding: renderBirding,
@@ -199,6 +274,8 @@ const routes = {
   calendar: renderCalendar,
   "calendar-day": renderCalendarDay,
   "calendar-edit": renderCalendarEdit,
+  terms: renderTerms,
+  "term-list": renderTermList,
   settings: renderSettings
 };
 
@@ -238,7 +315,7 @@ function seedCommonBirds(target) {
 }
 
 function render() {
-  const route = location.hash.slice(1) || "home";
+  const route = (location.hash.slice(1).split("?")[0]) || "home";
   app.innerHTML = (routes[route] || renderHome)();
 }
 
@@ -246,13 +323,14 @@ function renderHome() {
   const fitness = homeFitnessSummary();
   const crochet = homeCrochetSummary();
   const birding = homeBirdingSummary();
+  const cardIndex = dailyTechCardIndex();
   return shell("", "兴趣记", "Today", `
     <section class="home-hero">
       <div class="home-copy">
         <p class="home-kicker"><em>Keep what made today feel alive.</em></p>
         <img class="home-bird-mark" src="assets/pigeon-home.webp" alt="">
       </div>
-      ${renderTechStack()}
+      ${renderTechStack(cardIndex)}
       <div class="today-summary" aria-label="Today summary">
         <a class="summary-row" href="#fitness">
           <span class="summary-label">健身</span>
@@ -296,6 +374,57 @@ function renderTechStack(index = 0) {
 
 function clampCardIndex(index) {
   return (Number(index) + techCards.length) % techCards.length;
+}
+
+function dailyTechCardIndex() {
+  return clampCardIndex(today().replaceAll("-", "").split("").reduce((sum, digit) => sum + Number(digit), 0));
+}
+
+function renderTerms() {
+  const groups = techTermGroups();
+  return shell("home", "术语库", "按分类轻读", `
+    <section class="list terms-page">
+      <div class="list-stack term-groups">
+        ${groups.map((group) => `
+          <a class="term-group-card" href="#term-list?group=${encodeURIComponent(group.name)}">
+            <span>
+              <strong>${escapeHtml(group.name)}</strong>
+              <small>${group.count} 个词条</small>
+            </span>
+            <em>${escapeHtml(group.sample)}</em>
+          </a>
+        `).join("")}
+      </div>
+    </section>
+  `, bottomNav());
+}
+
+function renderTermList() {
+  const groupName = decodeURIComponent((location.hash.split("?group=")[1] || techCards[0].group || ""));
+  const terms = techCards.filter((card) => card.group === groupName);
+  return shell("terms", groupName || "术语", `${terms.length} 个词条`, `
+    <section class="list terms-page">
+      <div class="list-stack term-list">
+        ${terms.map((card) => `
+          <article class="term-list-card">
+            <strong>${escapeHtml(card.term)}</strong>
+            <p>${escapeHtml(card.plain)}</p>
+          </article>
+        `).join("") || `<article class="term-list-card"><strong>暂无词条</strong><p>返回分类重新选择。</p></article>`}
+      </div>
+    </section>
+  `, bottomNav());
+}
+
+function techTermGroups() {
+  const groups = new Map();
+  techCards.forEach((card) => {
+    const group = groups.get(card.group) || { name: card.group, count: 0, samples: [] };
+    group.count += 1;
+    if (group.samples.length < 3) group.samples.push(card.term);
+    groups.set(card.group, group);
+  });
+  return [...groups.values()].map((group) => ({ ...group, sample: group.samples.join(" / ") }));
 }
 
 function homeFitnessSummary() {
@@ -794,6 +923,7 @@ function bottomNav() {
       <a class="nav-item" href="#home">首页</a>
       <a class="nav-item" href="#birding">观鸟</a>
       <a class="nav-item" href="#fitness">健身</a>
+      <a class="nav-item" href="#terms">术语</a>
       <a class="nav-item" href="#crochet">钩织</a>
       <a class="nav-item" href="#calendar">日历</a>
     </nav>
