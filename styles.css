@@ -344,10 +344,8 @@ a {
   overflow: hidden;
   background: rgba(255, 250, 240, .48);
   border-color: rgba(224, 210, 184, .42);
-  border-left: 0;
-  border-right: 0;
-  border-radius: 0;
-  box-shadow: none;
+  border-radius: 18px;
+  box-shadow: 0 8px 18px rgba(70, 58, 38, .06);
 }
 
 .summary-label {
