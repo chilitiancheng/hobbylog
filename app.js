@@ -342,13 +342,13 @@ function renderHome() {
           <span class="summary-main">${crochet.main}</span>
           <span class="summary-meta">${crochet.meta}</span>
         </a>
-        <a class="summary-row${birding.thumb ? " has-thumb" : ""}" href="#birding">
+        <a class="summary-row" href="#birding">
           <span class="summary-label">观鸟</span>
           <span class="summary-main">${birding.main}</span>
-          ${birding.thumb}
           <span class="summary-meta">${birding.meta}</span>
         </a>
       </div>
+      ${renderHomePhotoStrip()}
     </section>
   `, bottomNav(), true);
 }
@@ -449,17 +449,23 @@ function homeCrochetSummary() {
 
 function homeBirdingSummary() {
   const latest = data.birding.logs[0];
-  const photo = birdPhotos()[0];
-  const thumbSrc = photo?.src || "assets/pigeon-home.webp";
-  const thumb = `<span class="summary-thumb"><img src="${escapeHtml(thumbSrc)}" alt=""></span>`;
   if (!latest) {
-    return { main: "未记录", meta: "Today", thumb };
+    return { main: "未记录", meta: "Today" };
   }
   return {
     main: escapeHtml(latest.species || "未命名"),
-    meta: escapeHtml(latest.location || latest.date || "观察记录"),
-    thumb
+    meta: escapeHtml(latest.location || latest.date || "观察记录")
   };
+}
+
+function renderHomePhotoStrip() {
+  const photos = birdPhotos().slice(0, 2);
+  const frames = [0, 1].map((index) => photos[index]?.src || "assets/pigeon-home.webp");
+  return `
+    <div class="home-photo-strip" aria-label="Birding photos">
+      ${frames.map((src) => `<a class="home-photo-frame" href="#bird-album"><img src="${escapeHtml(src)}" alt=""></a>`).join("")}
+    </div>
+  `;
 }
 
 function renderFitness() {
