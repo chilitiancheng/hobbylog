@@ -280,11 +280,11 @@ function homeCrochetSummary() {
 function homeBirdingSummary() {
   const latest = data.birding.logs[0];
   const photo = birdPhotos()[0];
-  if (!latest) {
-    return { main: "未记录", meta: "Today", thumb: "" };
-  }
   const thumbSrc = photo?.src || "assets/pigeon-home.webp";
   const thumb = `<span class="summary-thumb"><img src="${escapeHtml(thumbSrc)}" alt=""></span>`;
+  if (!latest) {
+    return { main: "未记录", meta: "Today", thumb };
+  }
   return {
     main: escapeHtml(latest.species || "未命名"),
     meta: escapeHtml(latest.location || latest.date || "观察记录"),
