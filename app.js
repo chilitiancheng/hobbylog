@@ -81,6 +81,23 @@ window.addEventListener("hashchange", () => {
 document.addEventListener("submit", onSubmit);
 document.addEventListener("click", onClick);
 document.addEventListener("input", onInput);
+document.addEventListener("pointerdown", onPointerDown);
+document.addEventListener("pointerup", onPointerUp);
+
+const techCards = [
+  { term: "Loss 函数", plain: "模型做错时的扣分表，分越低说明它越接近答案。" },
+  { term: "过拟合", plain: "把练习题背熟了，但换一道新题就容易翻车。" },
+  { term: "训练集", plain: "拿来教模型的例题本，模型先在这里反复练。" },
+  { term: "Embedding", plain: "把文字、图片或用户变成一串数字，让机器能比较它们像不像。" },
+  { term: "吞吐量", plain: "系统一口气能处理多少请求，像厨房每分钟能出几份餐。" },
+  { term: "AUC", plain: "看模型排序能力的分数，越高越会把重要的排前面。" },
+  { term: "JSON", plain: "前后端传小纸条常用的格式，名字和值一对一写清楚。" },
+  { term: "Request ID", plain: "每次请求的小票号，出问题时可以按这个号追踪。" },
+  { term: "Token", plain: "模型读写文字时切成的小块，计费和长度常按它算。" },
+  { term: "Latency", plain: "从发出请求到拿到回应的等待时间，越短越利落。" },
+  { term: "Batch Size", plain: "一次塞给模型练习或处理的样本数量，太大太小都影响效率。" },
+  { term: "向量数据库", plain: "专门存 Embedding 的仓库，用来快速找到语义相近的东西。" }
+];
 
 const routes = {
   home: renderHome,
@@ -235,6 +252,7 @@ function renderHome() {
         <p class="home-kicker"><em>Keep what made today feel alive.</em></p>
         <img class="home-bird-mark" src="assets/pigeon-home.webp" alt="">
       </div>
+      ${renderTechStack()}
       <div class="today-summary" aria-label="Today summary">
         <a class="summary-row" href="#fitness">
           <span class="summary-label">健身</span>
@@ -255,6 +273,29 @@ function renderHome() {
       </div>
     </section>
   `, bottomNav(), true);
+}
+
+function renderTechStack(index = 0) {
+  const activeIndex = clampCardIndex(index);
+  const card = techCards[activeIndex];
+  return `
+    <section class="tech-stack" data-tech-stack data-card-index="${activeIndex}" aria-label="Tech terms">
+      <button class="tech-stack-step" type="button" data-tech-card-step="-1" aria-label="Previous term">‹</button>
+      <article class="tech-card" data-tech-card role="button" tabindex="0" aria-live="polite">
+        <span class="tech-card-count">${activeIndex + 1}/${techCards.length}</span>
+        <h2>${escapeHtml(card.term)}</h2>
+        <p>${escapeHtml(card.plain)}</p>
+      </article>
+      <button class="tech-stack-step" type="button" data-tech-card-step="1" aria-label="Next term">›</button>
+      <div class="tech-stack-dots" aria-hidden="true">
+        ${techCards.map((_, dotIndex) => `<span class="${dotIndex === activeIndex ? "is-active" : ""}"></span>`).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function clampCardIndex(index) {
+  return (Number(index) + techCards.length) % techCards.length;
 }
 
 function homeFitnessSummary() {
@@ -824,6 +865,24 @@ function onSubmit(event) {
 }
 
 function onClick(event) {
+  const techStep = event.target.closest("[data-tech-card-step]");
+  if (techStep) {
+    event.preventDefault();
+    moveTechCard(techStep, Number(techStep.dataset.techCardStep));
+    return;
+  }
+
+  const techCard = event.target.closest("[data-tech-card]");
+  if (techCard) {
+    const stack = techCard.closest("[data-tech-stack]");
+    if (stack?.dataset.ignoreClick === "true") {
+      delete stack.dataset.ignoreClick;
+      return;
+    }
+    moveTechCard(techCard, 1);
+    return;
+  }
+
   const fitnessItem = event.target.closest("[data-fitness-item]");
   if (fitnessItem) {
     toggleFitnessItem(fitnessItem.dataset.planId, fitnessItem.dataset.fitnessItem);
@@ -938,6 +997,33 @@ function onClick(event) {
     saveData();
     render();
   }
+}
+
+function onPointerDown(event) {
+  const stack = event.target.closest("[data-tech-stack]");
+  if (!stack) return;
+  stack.dataset.startX = event.clientX;
+  stack.dataset.startY = event.clientY;
+}
+
+function onPointerUp(event) {
+  const stack = event.target.closest("[data-tech-stack]");
+  if (!stack || !stack.dataset.startX) return;
+  const deltaX = event.clientX - Number(stack.dataset.startX);
+  const deltaY = event.clientY - Number(stack.dataset.startY);
+  delete stack.dataset.startX;
+  delete stack.dataset.startY;
+  if (Math.abs(deltaX) < 32 || Math.abs(deltaX) < Math.abs(deltaY)) return;
+  event.preventDefault();
+  stack.dataset.ignoreClick = "true";
+  moveTechCard(stack, deltaX < 0 ? 1 : -1);
+}
+
+function moveTechCard(source, step) {
+  const stack = source.closest("[data-tech-stack]");
+  if (!stack) return;
+  const nextIndex = clampCardIndex(Number(stack.dataset.cardIndex || 0) + step);
+  stack.outerHTML = renderTechStack(nextIndex);
 }
 
 function onInput(event) {
